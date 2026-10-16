@@ -1,34 +1,40 @@
 import express, { Request, Response } from "express";
 
 interface User {
-  username: string;
+  email: string;
   password: string;
 }
 
 interface LoginRequest {
-  username?: string;
+  email?: string;
   password?: string;
 }
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const users: User[] = [
-  { username: "alice", password: "password123" },
-  { username: "bob", password: "letmein" },
+  { email: "alice@example.com", password: "password123" },
+  { email: "bob@example.com", password: "letmein" },
 ];
 
 const app = express();
 app.use(express.json());
 
 app.post("/login", (req: Request<object, object, LoginRequest>, res: Response) => {
-  const { username, password } = req.body || {};
+  const { email, password } = req.body || {};
 
-  if (!username || !password) {
-    return res.status(400).json({ error: "Username and password are required" });
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password are required" });
   }
 
-  const user = users.find((u) => u.username === username && u.password === password);
+  if (!EMAIL_REGEX.test(email)) {
+    return res.status(400).json({ error: "Email address is not valid" });
+  }
+
+  const user = users.find((u) => u.email === email && u.password === password);
 
   if (!user) {
-    return res.status(401).json({ error: "Invalid username or password" });
+    return res.status(401).json({ error: "Invalid email or password" });
   }
 
   return res.json({ message: "Login successful" });

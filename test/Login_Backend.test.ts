@@ -28,14 +28,14 @@ function login(body: unknown): Promise<globalThis.Response> {
 describe("POST /login", () => {
   describe("valid credentials", () => {
     test("returns 200 and a success message for alice", async () => {
-      const res = await login({ username: "alice", password: "password123" });
+      const res = await login({ email: "alice@example.com", password: "password123" });
 
       assert.strictEqual(res.status, 200);
       assert.deepStrictEqual(await res.json(), { message: "Login successful" });
     });
 
     test("returns 200 for bob", async () => {
-      const res = await login({ username: "bob", password: "letmein" });
+      const res = await login({ email: "bob@example.com", password: "letmein" });
 
       assert.strictEqual(res.status, 200);
     });
@@ -43,26 +43,20 @@ describe("POST /login", () => {
 
   describe("invalid credentials", () => {
     test("returns 401 for a wrong password", async () => {
-      const res = await login({ username: "alice", password: "wrong" });
+      const res = await login({ email: "alice@example.com", password: "wrong" });
 
       assert.strictEqual(res.status, 401);
-      assert.deepStrictEqual(await res.json(), { error: "Invalid username or password" });
+      assert.deepStrictEqual(await res.json(), { error: "Invalid email or password" });
     });
 
-    test("returns 401 for an unknown username", async () => {
-      const res = await login({ username: "charlie", password: "password123" });
+    test("returns 401 for an unknown email", async () => {
+      const res = await login({ email: "charlie@example.com", password: "password123" });
 
       assert.strictEqual(res.status, 401);
     });
 
     test("returns 401 when using another user's password", async () => {
-      const res = await login({ username: "alice", password: "letmein" });
-
-      assert.strictEqual(res.status, 401);
-    });
-
-    test("is case-sensitive for usernames", async () => {
-      const res = await login({ username: "Alice", password: "password123" });
+      const res = await login({ email: "alice@example.com", password: "letmein" });
 
       assert.strictEqual(res.status, 401);
     });
@@ -70,11 +64,11 @@ describe("POST /login", () => {
 
   describe("missing fields", () => {
     const cases = [
-      { name: "username is missing", body: { password: "password123" } },
-      { name: "password is missing", body: { username: "alice" } },
+      { name: "email is missing", body: { password: "password123" } },
+      { name: "password is missing", body: { email: "alice@example.com" } },
       { name: "both are missing", body: {} },
-      { name: "username is empty", body: { username: "", password: "password123" } },
-      { name: "password is empty", body: { username: "alice", password: "" } },
+      { name: "email is empty", body: { email: "", password: "password123" } },
+      { name: "password is empty", body: { email: "alice@example.com", password: "" } },
     ];
 
     for (const { name, body } of cases) {
@@ -82,7 +76,7 @@ describe("POST /login", () => {
         const res = await login(body);
 
         assert.strictEqual(res.status, 400);
-        assert.deepStrictEqual(await res.json(), { error: "Username and password are required" });
+        assert.deepStrictEqual(await res.json(), { error: "Email and password are required" });
       });
     }
 
@@ -90,6 +84,32 @@ describe("POST /login", () => {
       const res = await fetch(`${baseUrl}/login`, { method: "POST" });
 
       assert.strictEqual(res.status, 400);
+    });
+  });
+
+  describe("email format validation", () => {
+    const invalidEmails = [
+      "alice",
+      "alice@",
+      "@example.com",
+      "alice@example",
+      "alice example@example.com",
+      "alice@@example.com",
+    ];
+
+    for (const email of invalidEmails) {
+      test(`returns 400 for "${email}"`, async () => {
+        const res = await login({ email, password: "password123" });
+
+        assert.strictEqual(res.status, 400);
+        assert.deepStrictEqual(await res.json(), { error: "Email address is not valid" });
+      });
+    }
+
+    test("accepts a well-formed email that isn't registered (401, not 400)", async () => {
+      const res = await login({ email: "first.last+tag@sub.example.co.uk", password: "x" });
+
+      assert.strictEqual(res.status, 401);
     });
   });
 });
