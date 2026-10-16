@@ -1,8 +1,10 @@
 import { describe, test, beforeEach, mock } from "node:test";
+import { } from "playwright";
 import assert from "node:assert";
 import {
   LOCKOUT_DURATION_MS,
   MAX_FAILED_ATTEMPTS,
+  MIN_PASSWORD_LENGTH,
   clearFailedAttempts,
   createSession,
   endSession,
@@ -10,6 +12,7 @@ import {
   getBearerToken,
   isLockedOut,
   isValidEmail,
+  isValidPassword,
   recordFailedAttempt,
   resetLoginAttempts,
   resetSessions,
@@ -40,6 +43,33 @@ describe("isValidEmail", () => {
   }
 });
 
+describe("isValidPassword", () => {
+  test("the minimum length is 8", () => {
+    assert.strictEqual(MIN_PASSWORD_LENGTH, 8);
+  });
+
+  test("returns true for exactly 8 characters", () => {
+    assert.strictEqual(isValidPassword("abcdefgh"), true);
+  });
+
+  test("returns true for more than 8 characters", () => {
+    assert.strictEqual(isValidPassword("a much longer password"), true);
+  });
+
+  test("returns false for 7 characters", () => {
+    assert.strictEqual(isValidPassword("abcdefg"), false);
+  });
+
+  test("returns false for an empty password", () => {
+    assert.strictEqual(isValidPassword(""), false);
+  });
+
+  test("only checks length, so any 8 characters are allowed", () => {
+    assert.strictEqual(isValidPassword("12345678"), true);
+    assert.strictEqual(isValidPassword("!@#$%^&*"), true);
+  });
+});
+
 describe("findUser", () => {
   test("returns the user when email and password match", () => {
     const user = findUser("alice@example.com", "password123");
@@ -56,7 +86,7 @@ describe("findUser", () => {
   });
 
   test("returns undefined when the password belongs to a different user", () => {
-    assert.strictEqual(findUser("alice@example.com", "letmein"), undefined);
+    assert.strictEqual(findUser("alice@example.com", "letmein123"), undefined);
   });
 });
 

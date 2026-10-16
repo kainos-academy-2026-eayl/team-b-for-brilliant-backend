@@ -17,12 +17,13 @@ interface LoginAttempts {
 }
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const MIN_PASSWORD_LENGTH = 8;
 export const MAX_FAILED_ATTEMPTS = 5;
 export const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
 
 const users: User[] = [
   { email: "alice@example.com", password: "password123" },
-  { email: "bob@example.com", password: "letmein" },
+  { email: "bob@example.com", password: "letmein123" },
 ];
 
 // Keyed by email. Unknown emails are tracked too, so attackers can't tell
@@ -42,6 +43,10 @@ export function resetSessions(): void {
 
 export function isValidEmail(email: string): boolean {
   return EMAIL_REGEX.test(email);
+}
+
+export function isValidPassword(password: string): boolean {
+  return password.length >= MIN_PASSWORD_LENGTH;
 }
 
 export function findUser(email: string, password: string): User | undefined {
@@ -102,6 +107,12 @@ app.post("/login", (req: Request<object, object, LoginRequest>, res: Response) =
 
   if (!isValidEmail(email)) {
     return res.status(400).json({ error: "Email address is not valid" });
+  }
+
+  if (!isValidPassword(password)) {
+    return res
+      .status(400)
+      .json({ error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters long` });
   }
 
   if (isLockedOut(email)) {
