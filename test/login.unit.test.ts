@@ -16,7 +16,7 @@ import {
   recordFailedAttempt,
   resetLoginAttempts,
   resetSessions,
-} from "../Login_Backend";
+} from "../src/controllers/login";
 
 beforeEach(() => {
   resetLoginAttempts();

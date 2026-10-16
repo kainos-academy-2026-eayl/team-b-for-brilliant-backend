@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import express, { Request, Response } from "express";
+import { Router, type Request, type Response } from "express";
 
 interface User {
   email: string;
@@ -95,10 +95,9 @@ export function recordFailedAttempt(email: string): void {
   loginAttempts.set(email, attempts);
 }
 
-const app = express();
-app.use(express.json());
+export const loginRouter = Router();
 
-app.post("/login", (req: Request<object, object, LoginRequest>, res: Response) => {
+loginRouter.post("/login", (req: Request<object, object, LoginRequest>, res: Response) => {
   const { email, password } = req.body || {};
 
   if (!email || !password) {
@@ -132,7 +131,7 @@ app.post("/login", (req: Request<object, object, LoginRequest>, res: Response) =
   return res.json({ message: "Login successful", token });
 });
 
-app.post("/logout", (req: Request, res: Response) => {
+loginRouter.post("/logout", (req: Request, res: Response) => {
   const token = getBearerToken(req.headers.authorization);
 
   if (!token || !endSession(token)) {
@@ -141,9 +140,3 @@ app.post("/logout", (req: Request, res: Response) => {
 
   return res.json({ message: "Logged out" });
 });
-
-if (require.main === module) {
-  app.listen(3000, () => console.log("Listening on http://localhost:3000"));
-}
-
-export default app;

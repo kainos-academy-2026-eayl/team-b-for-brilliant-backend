@@ -1,19 +1,15 @@
-const js = require("@eslint/js");
-const globals = require("globals");
-const tseslint = require("typescript-eslint");
+import js from "@eslint/js";
+import globals from "globals";
+import tseslint from "typescript-eslint";
 
-module.exports = tseslint.config(
+export default tseslint.config(
   { ignores: ["dist/"] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
     languageOptions: {
-      ecmaVersion: 2022,
+      ecmaVersion: 2023,
       globals: globals.node,
     },
-  },
-  {
-    files: ["eslint.config.js"],
-    rules: { "@typescript-eslint/no-require-imports": "off" },
   },
 );

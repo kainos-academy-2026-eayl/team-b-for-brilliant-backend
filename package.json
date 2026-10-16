@@ -1,38 +1,36 @@
 {
-  "name": "team-b-for-brilliant-backend",
-  "version": "1.0.0",
-  "description": "Team B For Brilliant Backend",
-  "main": "dist/Login_Backend.js",
+  "name": "e-commerce-platform-backend",
+  "version": "0.1.0",
+  "description": "An e-commerce platform backend service",
+  "type": "module",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "tsx --test test/*.test.ts",
-    "start": "node dist/Login_Backend.js",
+    "dev": "tsx watch src/index.ts",
+    "build": "npm run typecheck && esbuild src/index.ts --bundle --platform=node --format=esm --target=node22 --packages=external --outfile=dist/index.js --sourcemap",
+    "typecheck": "tsc",
+    "start": "node dist/index.js",
     "lint": "eslint .",
-    "build": "tsc",
-    "dev": "tsx Login_Backend.ts"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/kainos-academy-2026-eayl/team-b-for-brilliant-backend.git"
+    "test": "tsx --test test/*.test.ts"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/kainos-academy-2026-eayl/team-b-for-brilliant-backend/issues"
-  },
-  "homepage": "https://github.com/kainos-academy-2026-eayl/team-b-for-brilliant-backend#readme",
-  "dependencies": {
-    "express": "^5.3.0",
-    "playwright": "^1.64.1"
-  },
+  "author": "John & Luke",
+  "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/express": "^5.0.6",
-    "@types/node": "^26.6.5",
+    "@types/express": "5.0.6",
+    "@types/node": "26.4.1",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "esbuild": "0.28.2",
     "eslint": "^10.12.0",
     "globals": "^17.13.0",
-    "tsx": "^4.23.15",
-    "typescript": "^6.0.3",
+    "tsx": "4.23.13",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-eslint": "^8.71.2"
+  },
+  "dependencies": {
+    "dotenv": "17.4.2",
+    "express": "5.2.1",
+    "lint": "^1.2.2",
+    "playwright": "^1.64.1"
   }
 }
