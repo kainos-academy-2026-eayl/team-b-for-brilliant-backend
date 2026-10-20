@@ -1,6 +1,55 @@
 # team-b-for-brilliant-backend
 Team B For Brilliant Backend
 
+## Local database and Prisma
+
+Prisma lets the backend query Postgres through a typed TypeScript client.
+The project uses Prisma 7. The schema defines the e-commerce tables, and
+versioned SQL migrations live in `prisma/migrations`.
+The CLI reads `DATABASE_URL` from `prisma.config.ts`, not the schema.
+The shared client uses `@prisma/adapter-pg` to connect to Postgres.
+
+1. Copy `.env.example` to `.env` if you do not already have one. If you do,
+   add any missing variables without overwriting your existing values.
+2. Start Docker Desktop, then run `docker compose up -d`.
+3. Run `npm ci`, then `npm run prisma:generate`.
+4. Check your schema with `npm run prisma:validate`, then run
+   `npm run prisma:migrate` to apply the existing migrations locally.
+
+The default local connection is
+`postgresql://dev:dev@localhost:5432/app_dev`. If you change the Postgres
+credentials, database name, or host port, update `DATABASE_URL` to match.
+Never commit `.env` or use these development credentials in production.
+
+Define tables as models in `prisma/schema.prisma`. After changing models, run:
+
+```sh
+npm run prisma:migrate -- --name describe_your_change
+```
+
+This creates a versioned SQL migration, applies it to your local database,
+and then the npm script generates a client matching your models (Prisma 7
+does not generate it automatically during migrations). Commit the schema and migrations
+with the feature. Do not reset an existing database just to set up Prisma.
+
+Import the shared client from `src/prismaClient.ts` in your services:
+
+```ts
+import { prisma } from '../prismaClient';
+```
+
+The module loads `.env` and reports a missing `DATABASE_URL` explicitly.
+Use one shared client rather than creating a new client for each request.
+The existing endpoints are unchanged and do not use the database yet.
+
+- `npm run prisma:generate` regenerates `src/generated/prisma`.
+- `npm run prisma:validate` checks the schema without changing the database.
+- `npm run prisma:migrate -- --name <change-name>` creates and applies a
+  development migration after a schema change.
+- `npm run prisma:studio` opens a database browser once models exist.
+- `npm run typecheck` (also used by the build) generates the client first,
+  so CI does not depend on an existing generated client or a running database.
+
 ## Backend CI
 
 The `Backend CI` workflow runs on pull requests targeting `main` or `master` (including new commits and reopened PRs), and on pushes to either branch, including merges. It installs dependencies using `npm ci`, then runs:

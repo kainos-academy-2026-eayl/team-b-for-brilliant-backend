@@ -8,4 +8,17 @@
  *
  * 🟢 You can import this file directly.
  */
+export type * from './models/Customer'
+export type * from './models/Product'
+export type * from './models/ProductImage'
+export type * from './models/Basket'
+export type * from './models/Department'
+export type * from './models/Category'
+export type * from './models/ProductCategories'
+export type * from './models/ProductPrices'
+export type * from './models/Admin'
+export type * from './models/Role'
+export type * from './models/Order'
+export type * from './models/OrderProducts'
+export type * from './models/Discounts'
 export type * from './commonInputTypes'
