@@ -1,12 +1,8 @@
 {
   "compilerOptions": {
     "target": "ES2023",
-    "lib": [
-      "ES2023"
-    ],
-    "types": [
-      "node"
-    ],
+    "lib": ["ES2023"],
+    "types": ["node"],
     "module": "Preserve",
     "moduleResolution": "Bundler",
     "rootDir": "src",
@@ -27,11 +23,6 @@
     "incremental": true,
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo"
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

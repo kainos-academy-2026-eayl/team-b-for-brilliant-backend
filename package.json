@@ -7,6 +7,10 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "npm run typecheck && esbuild src/index.ts --bundle --platform=node --format=esm --target=node22 --packages=external --outfile=dist/index.js --sourcemap",
+    "lint": "biome check . --error-on-warnings",
+    "lint:fix": "biome check . --write --error-on-warnings",
+    "prepare": "husky",
+    "test": "node --import tsx --test src/*.test.ts",
     "typecheck": "tsc",
     "start": "node dist/index.js"
   },
@@ -14,15 +18,20 @@
   "author": "John & Luke",
   "license": "MIT",
   "devDependencies": {
+    "@biomejs/biome": "2.5.15",
     "@types/express": "5.0.6",
     "@types/node": "26.4.1",
+    "@types/supertest": "7.2.1",
     "esbuild": "0.28.2",
+    "husky": "9.1.7",
+    "prisma": "6.19.3",
+    "supertest": "7.3.1",
     "tsx": "4.23.13",
     "typescript": "7.0.2"
   },
   "dependencies": {
+    "@prisma/client": "6.19.3",
     "dotenv": "17.4.2",
-    "express": "5.2.1",
-    "lint": "^1.2.2"
+    "express": "5.2.1"
   }
 }
