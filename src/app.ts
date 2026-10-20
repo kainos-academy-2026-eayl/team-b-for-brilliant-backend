@@ -11,5 +11,3 @@ export function createApp(): Express {
   app.use('/bookings', bookingsRouter);
   return app;
 }
-
-
