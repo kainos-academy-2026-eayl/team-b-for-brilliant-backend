@@ -1,0 +1,178 @@
+generator client {
+    provider = "prisma-client"
+    output   = "../src/generated/prisma"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+model Customer {
+    customerID   String  @id @default(uuid())
+    email        String  @unique
+    firstname    String
+    surname      String
+    addressLine1 String
+    addressLine2 String?
+    postcode     String
+    passwordHash String
+
+    createdAt DateTime @default(now())
+
+    baskets       Basket[]
+    orders        Order[]
+    orderProducts OrderProducts[]
+}
+
+model Product {
+    productID   String  @id @default(uuid())
+    name        String
+    description String?
+    quantity    Int
+    draft       Boolean @default(true)
+    visible     Boolean @default(false)
+    weight      Float
+
+    baskets       Basket[]
+    categories    ProductCategories[]
+    prices        ProductPrices[]
+    orderProducts OrderProducts[]
+    productImages ProductImage[]
+}
+
+model ProductImage {
+    imageID   String  @id @default(uuid())
+    productID String
+    imageUrl  String
+    product   Product @relation(fields: [productID], references: [productID])
+}
+
+model Basket {
+    customerID String
+    productID  String
+    quantity   Int
+
+    customer Customer @relation(fields: [customerID], references: [customerID])
+    product  Product  @relation(fields: [productID], references: [productID])
+
+    @@id([customerID, productID])
+}
+
+model Department {
+    departmentID String  @id @default(uuid())
+    name         String
+    description  String?
+
+    categories Category[]
+}
+
+model Category {
+    categoryID   String  @id @default(uuid())
+    name         String
+    description  String?
+    departmentID String
+
+    department Department @relation(fields: [departmentID], references: [departmentID])
+
+    products ProductCategories[]
+}
+
+model ProductCategories {
+    productID  String
+    categoryID String
+
+    product  Product  @relation(fields: [productID], references: [productID])
+    category Category @relation(fields: [categoryID], references: [categoryID])
+
+    @@id([productID, categoryID])
+}
+
+model ProductPrices {
+    priceID   String   @id @default(uuid())
+    productID String
+    price     Decimal  @db.Decimal(10, 2)
+    createdAt DateTime @default(now())
+
+    product Product @relation(fields: [productID], references: [productID])
+}
+
+model Admin {
+    adminID      String  @id @default(uuid())
+    email        String  @unique
+    firstname    String
+    surname      String
+    username     String  @unique
+    passwordHash String
+    addressLine1 String
+    addressLine2 String?
+    postcode     String
+
+    roleID String
+
+    role      Role     @relation(fields: [roleID], references: [roleID])
+    createdAt DateTime @default(now())
+}
+
+model Role {
+    roleID      String  @id @default(uuid())
+    name        String  @unique
+    description String?
+    accessLevel Int
+
+    createdAt DateTime @default(now())
+
+    admins Admin[]
+}
+
+model Order {
+    orderID       String      @id @default(uuid())
+    customerID    String
+    datePurchased DateTime    @default(now())
+    addressLine1  String
+    addressLine2  String?
+    postcode      String
+    shippingFee   Decimal     @db.Decimal(10, 2)
+    discountID    String?
+    subtotal      Decimal     @db.Decimal(10, 2)
+    total         Decimal     @db.Decimal(10, 2)
+    status        OrderStatus @default(PENDING)
+
+    customer Customer   @relation(fields: [customerID], references: [customerID])
+    discount Discounts? @relation(fields: [discountID], references: [discountID])
+
+    orderProducts OrderProducts[]
+}
+
+enum OrderStatus {
+    PENDING
+    PAID
+    PICKING
+    DISPATCHED
+    DELIVERED
+    CANCELLED
+    REFUNDED
+}
+
+model OrderProducts {
+    orderID    String
+    customerID String
+    productID  String
+    quantity   Int
+
+    order    Order    @relation(fields: [orderID], references: [orderID])
+    customer Customer @relation(fields: [customerID], references: [customerID])
+    product  Product  @relation(fields: [productID], references: [productID])
+
+    @@id([orderID, customerID, productID])
+}
+
+model Discounts {
+    discountID String   @id @default(uuid())
+    code       String
+    Percentage Float?
+    amountOff  Float?
+    createdAt  DateTime @default(now())
+    expiryDate DateTime @default(now())
+
+    orders Order[]
+}
