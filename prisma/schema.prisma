@@ -19,19 +19,19 @@ model Customer {
 
     createdAt DateTime @default(now())
 
-    baskets       Basket[]
-    orders        Order[]
-    orderProducts OrderProducts[]
+    baskets Basket[]
+    orders  Order[]
 }
 
 model Product {
-    productID   String  @id @default(uuid())
+    productID   String    @id @default(uuid())
     name        String
     description String?
     quantity    Int
-    draft       Boolean @default(true)
-    visible     Boolean @default(false)
+    draft       Boolean   @default(true)
+    visible     Boolean   @default(false)
     weight      Float
+    deletedAt   DateTime?
 
     baskets       Basket[]
     categories    ProductCategories[]
@@ -44,7 +44,7 @@ model ProductImage {
     imageID   String  @id @default(uuid())
     productID String
     imageUrl  String
-    product   Product @relation(fields: [productID], references: [productID])
+    product   Product @relation(fields: [productID], references: [productID], onDelete: Cascade, onUpdate: Cascade)
 }
 
 model Basket {
@@ -52,8 +52,8 @@ model Basket {
     productID  String
     quantity   Int
 
-    customer Customer @relation(fields: [customerID], references: [customerID])
-    product  Product  @relation(fields: [productID], references: [productID])
+    customer Customer @relation(fields: [customerID], references: [customerID], onDelete: Cascade, onUpdate: Cascade)
+    product  Product  @relation(fields: [productID], references: [productID], onDelete: Cascade, onUpdate: Cascade)
 
     @@id([customerID, productID])
 }
@@ -72,7 +72,7 @@ model Category {
     description  String?
     departmentID String
 
-    department Department @relation(fields: [departmentID], references: [departmentID])
+    department Department @relation(fields: [departmentID], references: [departmentID], onDelete: Cascade, onUpdate: Cascade)
 
     products ProductCategories[]
 }
@@ -81,8 +81,8 @@ model ProductCategories {
     productID  String
     categoryID String
 
-    product  Product  @relation(fields: [productID], references: [productID])
-    category Category @relation(fields: [categoryID], references: [categoryID])
+    product  Product  @relation(fields: [productID], references: [productID], onDelete: Cascade, onUpdate: Cascade)
+    category Category @relation(fields: [categoryID], references: [categoryID], onDelete: Cascade, onUpdate: Cascade)
 
     @@id([productID, categoryID])
 }
@@ -93,7 +93,7 @@ model ProductPrices {
     price     Decimal  @db.Decimal(10, 2)
     createdAt DateTime @default(now())
 
-    product Product @relation(fields: [productID], references: [productID])
+    product Product @relation(fields: [productID], references: [productID], onDelete: Cascade, onUpdate: Cascade)
 }
 
 model Admin {
@@ -107,9 +107,9 @@ model Admin {
     addressLine2 String?
     postcode     String
 
-    roleID String
+    roleID String?
 
-    role      Role     @relation(fields: [roleID], references: [roleID])
+    role      Role?    @relation(fields: [roleID], references: [roleID], onDelete: SetNull, onUpdate: Cascade)
     createdAt DateTime @default(now())
 }
 
@@ -126,7 +126,7 @@ model Role {
 
 model Order {
     orderID       String      @id @default(uuid())
-    customerID    String
+    customerID    String?
     datePurchased DateTime    @default(now())
     addressLine1  String
     addressLine2  String?
@@ -137,8 +137,8 @@ model Order {
     total         Decimal     @db.Decimal(10, 2)
     status        OrderStatus @default(PENDING)
 
-    customer Customer   @relation(fields: [customerID], references: [customerID])
-    discount Discounts? @relation(fields: [discountID], references: [discountID])
+    customer Customer?  @relation(fields: [customerID], references: [customerID], onDelete: SetNull, onUpdate: Cascade)
+    discount Discounts? @relation(fields: [discountID], references: [discountID], onDelete: SetNull, onUpdate: Cascade)
 
     orderProducts OrderProducts[]
 }
@@ -154,25 +154,28 @@ enum OrderStatus {
 }
 
 model OrderProducts {
-    orderID    String
-    customerID String
-    productID  String
-    quantity   Int
+    orderID   String
+    productID String
+    quantity  Int
 
-    order    Order    @relation(fields: [orderID], references: [orderID])
-    customer Customer @relation(fields: [customerID], references: [customerID])
-    product  Product  @relation(fields: [productID], references: [productID])
+    order   Order   @relation(fields: [orderID], references: [orderID], onDelete: Cascade, onUpdate: Cascade)
+    product Product @relation(fields: [productID], references: [productID], onDelete: Cascade, onUpdate: Cascade)
 
-    @@id([orderID, customerID, productID])
+    @@id([orderID, productID])
 }
 
 model Discounts {
-    discountID String   @id @default(uuid())
-    code       String
-    Percentage Float?
-    amountOff  Float?
-    createdAt  DateTime @default(now())
-    expiryDate DateTime @default(now())
+    discountID String       @id @default(uuid())
+    code       String       @unique
+    type       DiscountType
+    value      Decimal      @db.Decimal(10, 2)
+    createdAt  DateTime     @default(now())
+    expiryDate DateTime
 
     orders Order[]
+}
+
+enum DiscountType {
+    PERCENTAGE
+    AMOUNT_OFF
 }
