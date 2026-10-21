@@ -6,3 +6,33 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model Product {
+  productID   String    @id @default(uuid())
+  name        String
+  description String?
+  quantity    Int
+  draft       Boolean   @default(true)
+  visible     Boolean   @default(false)
+  weight      Float
+  deletedAt   DateTime?
+
+  productImages ProductImage[]
+  productPrices ProductPrices[]
+}
+
+model ProductImage {
+  imageID   String  @id @default(uuid())
+  productID String
+  imageUrl  String
+  product   Product @relation(fields: [productID], references: [productID], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model ProductPrices {
+  priceID   String   @id @default(uuid())
+  productID String
+  price     Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productID], references: [productID], onDelete: Cascade, onUpdate: Cascade)
+}
