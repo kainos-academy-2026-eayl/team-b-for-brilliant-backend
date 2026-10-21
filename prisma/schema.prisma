@@ -36,3 +36,16 @@ model ProductPrices {
 
   product Product @relation(fields: [productID], references: [productID], onDelete: Cascade, onUpdate: Cascade)
 }
+
+model Customer {
+  customerID   String  @id @default(uuid())
+  email        String  @unique
+  firstname    String
+  surname      String
+  addressLine1 String
+  addressLine2 String?
+  postcode     String
+  passwordHash String
+
+  createdAt DateTime @default(now())
+}
