@@ -4,8 +4,9 @@ Team B For Brilliant Backend
 ## Local database and Prisma
 
 Prisma lets the backend query Postgres through a typed TypeScript client.
-The project uses Prisma 7. The schema defines the e-commerce tables, and
-versioned SQL migrations live in `prisma/migrations`.
+The project uses Prisma 7. The schema currently has no models, and there
+are no migrations or application tables. New versioned SQL migrations will
+live in `prisma/migrations`.
 The CLI reads `DATABASE_URL` from `prisma.config.ts`, not the schema.
 The shared client uses `@prisma/adapter-pg` to connect to Postgres.
 
@@ -13,8 +14,8 @@ The shared client uses `@prisma/adapter-pg` to connect to Postgres.
    add any missing variables without overwriting your existing values.
 2. Start Docker Desktop, then run `docker compose up -d`.
 3. Run `npm ci`, then `npm run prisma:generate`.
-4. Check your schema with `npm run prisma:validate`, then run
-   `npm run prisma:migrate` to apply the existing migrations locally.
+4. Check your schema with `npm run prisma:validate`. Create your first
+   migration after adding models, as described below.
 
 The default local connection is
 `postgresql://dev:dev@localhost:5432/app_dev`. If you change the Postgres
