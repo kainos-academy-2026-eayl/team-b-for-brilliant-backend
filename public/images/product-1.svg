@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480" role="img" aria-labelledby="title description">
+  <title id="title">Example product</title>
+  <desc id="description">An original illustration of a blue product box on a pale background.</desc>
+  <rect width="640" height="480" rx="24" fill="#eff6ff"/>
+  <ellipse cx="320" cy="370" rx="140" ry="22" fill="#dbeafe"/>
+  <path d="M200 170 320 110 440 170 320 230Z" fill="#60a5fa"/>
+  <path d="M200 170 320 230 320 360 200 300Z" fill="#2563eb"/>
+  <path d="M320 230 440 170 440 300 320 360Z" fill="#1d4ed8"/>
+  <path d="M260 140 380 200 380 250 350 265 350 215 230 155Z" fill="#bfdbfe"/>
+  <text x="320" y="430" text-anchor="middle" font-family="sans-serif" font-size="24" fill="#1e3a8a">Example product</text>
+</svg>

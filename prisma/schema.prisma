@@ -18,6 +18,7 @@ model Product {
   deletedAt   DateTime?
 
   productImages ProductImage[]
+  productPrices ProductPrices[]
 }
 
 model ProductImage {
@@ -25,4 +26,13 @@ model ProductImage {
   productID String
   imageUrl  String
   product   Product @relation(fields: [productID], references: [productID], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model ProductPrices {
+  priceID   String   @id @default(uuid())
+  productID String
+  price     Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productID], references: [productID], onDelete: Cascade, onUpdate: Cascade)
 }

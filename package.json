@@ -14,7 +14,8 @@
     "prisma:validate": "prisma validate",
     "prisma:migrate": "prisma migrate dev && npm run prisma:generate",
     "prisma:studio": "prisma studio",
-    "test": "node --import tsx --test src/*.test.ts",
+    "prisma:seed": "npm run prisma:generate && prisma db seed",
+    "test": "node --import tsx --test src/*.test.ts tests/*.test.ts",
     "pretypecheck": "npm run prisma:generate",
     "typecheck": "tsc",
     "start": "node dist/index.js"
@@ -38,6 +39,7 @@
     "@prisma/adapter-pg": "7.10.1",
     "@prisma/client": "7.10.1",
     "dotenv": "17.4.2",
-    "express": "5.2.1"
+    "express": "5.2.1",
+    "zod": "4.6.7"
   }
 }
