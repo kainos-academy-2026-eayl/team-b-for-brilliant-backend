@@ -22,10 +22,11 @@ model Product {
 }
 
 model ProductImage {
-  imageID   String  @id @default(uuid())
-  productID String
-  imageUrl  String
-  product   Product @relation(fields: [productID], references: [productID], onDelete: Cascade, onUpdate: Cascade)
+  imageID    String  @id @default(uuid())
+  productID  String
+  imageUrl   String
+  imageOrder Int
+  product    Product @relation(fields: [productID], references: [productID], onDelete: Cascade, onUpdate: Cascade)
 }
 
 model ProductPrices {
