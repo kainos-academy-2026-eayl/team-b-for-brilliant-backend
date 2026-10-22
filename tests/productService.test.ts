@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { toProductDto } from '../src/mappers/product';
 import type { ProductWithImages } from '../src/repositories/products';
-import { getProducts } from '../src/services/products';
+import { getProduct, getProducts } from '../src/services/products';
 
 const product: ProductWithImages = {
   productID: 'product-1',
@@ -13,7 +13,10 @@ const product: ProductWithImages = {
   visible: true,
   weight: 1.5,
   deletedAt: new Date('2026-10-01T12:00:00.000Z'),
-  productImages: [{ imageID: 'image-1', productID: 'product-1', imageUrl: '/image.jpg' }],
+  productImages: [
+    { imageID: 'image-1', productID: 'product-1', imageUrl: '/image.jpg', imageOrder: 0 },
+    { imageID: 'image-2', productID: 'product-1', imageUrl: '/other.jpg', imageOrder: 2 },
+  ],
 };
 
 test('product mapper preserves the response fields and serializes dates', () => {
@@ -51,5 +54,26 @@ test('product service propagates repository errors', async () => {
       throw error;
     }),
     (actual) => actual === error,
+  );
+});
+
+test('single product service queries the requested ID and maps the result', async () => {
+  const result = await getProduct('product-1', async (id) => {
+    assert.equal(id, 'product-1');
+    return product;
+  });
+  assert.deepEqual(result, toProductDto(product));
+});
+
+test('single product service returns null for a missing product', async () => {
+  assert.equal(await getProduct('missing', async () => null), null);
+});
+
+test('single product service propagates repository errors', async () => {
+  await assert.rejects(
+    getProduct('product-1', async () => {
+      throw new Error('Database unavailable');
+    }),
+    /Database unavailable/,
   );
 });

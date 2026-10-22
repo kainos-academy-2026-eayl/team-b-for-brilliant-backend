@@ -4,10 +4,12 @@ import { bookingsRouter } from './controllers/bookings';
 import { authRouter } from './controllers/login';
 import { createProductsRouter, productPriceServices } from './controllers/products';
 import type { ProductDto } from './dtos/product';
-import { getProducts } from './services/products';
+import { getProduct, getProducts } from './services/products';
+
 export function createApp(
   fetchProducts: () => Promise<ProductDto[]> = getProducts,
   prices = productPriceServices,
+  fetchProduct: (productID: string) => Promise<ProductDto | null> = getProduct,
 ): Express {
   const app = express();
 
@@ -21,6 +23,6 @@ export function createApp(
   app.use('/auth', authRouter);
 
   app.use('/bookings', bookingsRouter);
-  app.use('/products', createProductsRouter(fetchProducts, prices));
+  app.use('/products', createProductsRouter(fetchProducts, prices, fetchProduct));
   return app;
 }

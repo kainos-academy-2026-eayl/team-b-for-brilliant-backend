@@ -28,10 +28,11 @@ model Product {
 }
 
 model ProductImage {
-  imageID   String  @id @default(uuid())
-  productID String
-  imageUrl  String
-  product   Product @relation(fields: [productID], references: [productID], onDelete: Cascade, onUpdate: Cascade)
+  imageID    String  @id @default(uuid())
+  productID  String
+  imageUrl   String
+  imageOrder Int
+  product    Product @relation(fields: [productID], references: [productID], onDelete: Cascade, onUpdate: Cascade)
 }
 
 model ProductPrices {
@@ -41,4 +42,44 @@ model ProductPrices {
   createdAt DateTime @default(now())
 
   product Product @relation(fields: [productID], references: [productID], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model Customer {
+  customerID   String  @id @default(uuid())
+  email        String  @unique
+  firstname    String
+  surname      String
+  addressLine1 String
+  addressLine2 String?
+  postcode     String
+  passwordHash String
+
+  createdAt DateTime @default(now())
+}
+model Admin {
+    adminID      String  @id @default(uuid())
+    email        String  @unique
+    firstname    String
+    surname      String
+    username     String  @unique
+    passwordHash String
+    addressLine1 String
+    addressLine2 String?
+    postcode     String
+ 
+    roleID String?
+ 
+    role      Role?    @relation(fields: [roleID], references: [roleID], onDelete: SetNull, onUpdate: Cascade)
+    createdAt DateTime @default(now())
+}
+
+model Role {
+    roleID      String  @id @default(uuid())
+    name        String  @unique
+    description String?
+    accessLevel Int
+ 
+    createdAt DateTime @default(now())
+ 
+    admins Admin[]
 }
