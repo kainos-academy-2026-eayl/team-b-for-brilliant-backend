@@ -5,6 +5,19 @@ export interface ProductImageDto {
   imageOrder: number;
 }
 
+export interface CategoryDto {
+  categoryID: string;
+  name: string;
+  description: string | null;
+  departmentID: string;
+}
+
+export interface DepartmentDto {
+  departmentID: string;
+  name: string;
+  description: string | null;
+}
+
 export interface ProductDto {
   productID: string;
   name: string;
@@ -15,6 +28,8 @@ export interface ProductDto {
   weight: number;
   deletedAt: string | null;
   productImages: ProductImageDto[];
+  categories: CategoryDto[];
+  departments: DepartmentDto[];
 }
 
 export interface ProductsResponseDto {

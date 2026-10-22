@@ -15,6 +15,21 @@ test('GET /products returns products with their images', async () => {
       visible: true,
       weight: 1.5,
       deletedAt: null,
+      categories: [
+        {
+          categoryID: 'category-1',
+          name: 'Accessories',
+          description: 'Product accessories',
+          departmentID: 'department-1',
+        },
+      ],
+      departments: [
+        {
+          departmentID: 'department-1',
+          name: 'Lifestyle',
+          description: 'Lifestyle products',
+        },
+      ],
       productImages: [
         {
           imageID: 'image-1',
@@ -33,6 +48,8 @@ test('GET /products returns products with their images', async () => {
       visible: false,
       weight: 2,
       deletedAt: null,
+      categories: [],
+      departments: [],
       productImages: [],
     },
   ];
@@ -71,6 +88,21 @@ test('GET /products/:productID returns the selected product with images', async 
     visible: true,
     weight: 1.5,
     deletedAt: null,
+    categories: [
+      {
+        categoryID: 'category-1',
+        name: 'Accessories',
+        description: 'Product accessories',
+        departmentID: 'department-1',
+      },
+    ],
+    departments: [
+      {
+        departmentID: 'department-1',
+        name: 'Lifestyle',
+        description: 'Lifestyle products',
+      },
+    ],
     productImages: [
       {
         imageID: 'image-1',
