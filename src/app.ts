@@ -1,6 +1,8 @@
 import { resolve } from 'node:path';
 import express, { type Express, type Request, type Response } from 'express';
+import { basketRouter } from './controllers/basket';
 import { bookingsRouter } from './controllers/bookings';
+import { checkoutRouter } from './controllers/checkout';
 import { createProductsRouter, productPriceServices } from './controllers/products';
 import type { ProductDto } from './dtos/product';
 import { getProduct, getProducts } from './services/products';
@@ -12,6 +14,8 @@ export function createApp(
 ): Express {
   const app = express();
 
+  app.use(express.json());
+
   app.use('/images', express.static(resolve('public/images'), { index: false }));
 
   app.get('/health', (_req: Request, res: Response) => {
@@ -20,5 +24,7 @@ export function createApp(
 
   app.use('/bookings', bookingsRouter);
   app.use('/products', createProductsRouter(fetchProducts, prices, fetchProduct));
+  app.use('/basket', basketRouter);
+  app.use('/checkout', checkoutRouter);
   return app;
 }
