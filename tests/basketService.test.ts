@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { HttpError } from '../src/errors/httpError';
-import type { BasketItemWithProduct } from '../src/repositories/basket';
+import type { BasketItemWithProduct, LockedBasketQueries } from '../src/repositories/basket';
 import {
   addToBasket,
   type BasketRepository,
@@ -33,9 +33,8 @@ function createFakeRepo(stock: number, quantityInBasket?: number): BasketReposit
     product,
   });
 
-  return {
+  const locked: LockedBasketQueries = {
     findProductForBasket: async () => product,
-    findBasketItems: async () => (basketQuantity === undefined ? [] : [toItem(basketQuantity)]),
     findBasketItem: async () => (basketQuantity === undefined ? null : toItem(basketQuantity)),
     saveBasketItemQuantity: async (_customerID, _productID, quantity) => {
       basketQuantity = quantity;
@@ -46,6 +45,11 @@ function createFakeRepo(stock: number, quantityInBasket?: number): BasketReposit
       basketQuantity = undefined;
       return { count };
     },
+  };
+
+  return {
+    findBasketItems: async () => (basketQuantity === undefined ? [] : [toItem(basketQuantity)]),
+    withCustomerLock: (_customerID, work) => work(locked),
   };
 }
 
@@ -78,6 +82,21 @@ test('adding to an existing basket item adds to its quantity', async () => {
 test('setting quantity to exactly the stock level is allowed', async () => {
   const item = await setBasketItemQuantity('customer-1', 'product-1', 5, createFakeRepo(5, 2));
   assert.equal(item.quantityInBasket, 5);
+});
+
+test('setting quantity to 0 removes the item from the basket', async () => {
+  const repo = createFakeRepo(5, 2);
+  const result = await setBasketItemQuantity('customer-1', 'product-1', 0, repo);
+
+  assert.equal(result, null);
+  assert.deepEqual((await getBasket('customer-1', repo)).items, []);
+});
+
+test('setting quantity to 0 for an item not in the basket returns not found', async () => {
+  await assert.rejects(
+    setBasketItemQuantity('customer-1', 'product-1', 0, createFakeRepo(5)),
+    (error) => error instanceof HttpError && error.status === 404,
+  );
 });
 
 test('setting quantity above stock is rejected', async () => {

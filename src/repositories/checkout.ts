@@ -1,9 +1,13 @@
 import { HttpError } from '../errors/httpError';
+import { lockCustomer } from './customerLock';
 
 export async function completeCheckout(customerID: string): Promise<{ orderID: string }> {
   const { prisma } = await import('../prismaClient');
 
   return prisma.$transaction(async (tx) => {
+    // A second checkout for this customer waits here, then sees the already-cleared basket
+    await lockCustomer(tx, customerID);
+
     const basketItems = await tx.basketItem.findMany({
       where: { customerID },
       include: { product: true },

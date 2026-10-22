@@ -7,8 +7,9 @@ export const AddBasketItemSchema = z.object({
   quantity: QuantitySchema,
 });
 
+// 0 is allowed when editing: it means "remove this item from the basket"
 export const UpdateBasketItemSchema = z.object({
-  quantity: QuantitySchema,
+  quantity: z.int().min(0).max(2_147_483_647),
 });
 
 export function validateAddBasketItem(input: unknown) {
