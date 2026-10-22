@@ -83,6 +83,7 @@ test('GET /products/:productID returns the selected product with images', async 
   const app = createApp(
     async () => [],
     undefined,
+    undefined,
     async (id) => {
       assert.equal(id, 'product-1');
       return product;
@@ -96,6 +97,7 @@ test('GET /products/:productID returns 404 for an unknown product', async () => 
   const app = createApp(
     async () => [],
     undefined,
+    undefined,
     async () => null,
   );
   const response = await request(app).get('/products/missing').expect(404);
@@ -105,6 +107,7 @@ test('GET /products/:productID returns 404 for an unknown product', async () => 
 test('GET /products/:productID propagates database failures', async () => {
   const app = createApp(
     async () => [],
+    undefined,
     undefined,
     async () => {
       throw new Error('Database unavailable');
