@@ -1,0 +1,9 @@
+BEGIN;
+
+ALTER TABLE "ProductImage"
+DROP COLUMN "mainImage",
+ADD COLUMN "imageOrder" INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE "ProductImage" ALTER COLUMN "imageOrder" DROP DEFAULT;
+
+COMMIT;
