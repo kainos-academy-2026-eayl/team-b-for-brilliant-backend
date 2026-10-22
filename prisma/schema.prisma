@@ -7,6 +7,12 @@ datasource db {
   provider = "postgresql"
 }
 
+model Customer {
+  customerId   String @id @default(uuid())
+  email        String @unique
+  passwordHash String
+}
+
 model Product {
   productID   String    @id @default(uuid())
   name        String

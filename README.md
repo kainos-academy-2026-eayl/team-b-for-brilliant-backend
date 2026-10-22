@@ -153,6 +153,58 @@ Unknown properties, including IDs, deletion timestamps and images, are stripped
 from validated data. Always use the validated `data`, not the original input.
 This is input validation only: it does not save products or add a POST endpoint.
 
+## Customer credential verification
+
+`POST /auth/verify` accepts JSON `{ "email": "...", "password": "..." }`.
+The controller in `src/controllers/login.ts` calls the login service, which
+looks up a customer through the Prisma repository. Email is trimmed and
+lowercased; passwords are not trimmed. Customers must be stored with lowercase emails.
+The `Customer` model stores `customerId`, unique `email`, and `passwordHash`.
+Passwords are salted using Node's scrypt, not stored in plain text.
+
+- Correct credentials: HTTP 200 with only `{ "customerId": "<id>" }`.
+- Unknown email or incorrect password: HTTP 401.
+- Invalid/missing request fields: HTTP 400.
+- Database or password-record failures: logged server-side, HTTP 503 with a generic message.
+
+This endpoint verifies credentials only. It does not create sessions, implement
+logout, lockout, or rate limiting. The frontend owns its session and its
+five-second backend-request timeout. Add rate limiting before exposing this endpoint publicly.
+
+#### Connect to a specific Docker Postgres database
+
+1. In the backend's uncommitted `.env`, set
+   `DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE`.
+   URL-encode special characters in credentials. For a backend running on your
+   Mac, `HOST` is `localhost` and `PORT` is the container's **published host port**,
+   not necessarily 5432. For example, a `5433:5432` mapping uses port 5433.
+   Check the mapping with `docker ps`.
+2. With this repository's Compose database, set `POSTGRES_USER`,
+   `POSTGRES_PASSWORD`, `POSTGRES_DB`, and `POSTGRES_PORT` to match the URL.
+   Start it with `docker compose up -d db` and check `docker compose ps`.
+   These initialization variables do not change an already-initialized volume's
+   credentials or create another database. Do not delete a volume to fix a mismatch.
+3. If the backend also runs in Compose on the same network, use the database
+   service name (`db` here) as `HOST` and its internal port 5432, not `localhost`.
+4. Confirm this is the intended **development** database, then apply the committed
+   migrations with `npx prisma migrate deploy` and run `npm run prisma:generate`.
+   This creates the Customer table along with any pending product migrations;
+   it does not insert a customer. Do not run development resets against an
+   existing or shared database. Coordinate migrations for shared environments.
+5. For local testing, add `SEED_CUSTOMER_EMAIL` and `SEED_CUSTOMER_PASSWORD`
+   (at least eight characters) to the backend's `.env`, then run
+   `npm run prisma:seed:customer`. No default credentials are committed.
+   The command inserts a customer if the email is absent and never changes
+   an existing customer's password. Remove the seed variables afterward.
+6. Start/restart the backend with `npm run dev`. In the **frontend's** `.env`,
+   set `CUSTOMER_ACCOUNT_SERVICE_URL` to the backend HTTP base URL
+   (for example `http://localhost:3000`), not the PostgreSQL URL. Restart the
+   frontend and test successful login, incorrect credentials, and backend downtime.
+
+Existing databases need the Prisma Customer table and scrypt password format
+described above. An existing unrelated account table or another hash format
+requires an explicit schema/password migration; it will not be detected automatically.
+
 ## Backend CI
 
 The `Backend CI` workflow runs on pull requests targeting `main` or `master` (including new commits and reopened PRs), and on pushes to either branch, including merges. It installs dependencies using `npm ci`, then runs:

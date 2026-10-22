@@ -15,6 +15,7 @@
     "prisma:migrate": "prisma migrate dev && npm run prisma:generate",
     "prisma:studio": "prisma studio",
     "prisma:seed": "npm run prisma:generate && prisma db seed",
+    "prisma:seed:customer": "npm run prisma:generate && tsx prisma/seedCustomer.ts",
     "test": "node --import tsx --test src/*.test.ts tests/*.test.ts",
     "pretypecheck": "npm run prisma:generate",
     "typecheck": "tsc",
@@ -40,6 +41,6 @@
     "@prisma/client": "7.10.1",
     "dotenv": "17.4.2",
     "express": "5.2.1",
-    "zod": "4.6.7"
+    "zod": "^4.6.7"
   }
 }
