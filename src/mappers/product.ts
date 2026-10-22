@@ -15,6 +15,7 @@ export function toProductDto(product: ProductWithImages): ProductDto {
       imageID: image.imageID,
       productID: image.productID,
       imageUrl: image.imageUrl,
+      imageOrder: image.imageOrder,
     })),
   };
 }

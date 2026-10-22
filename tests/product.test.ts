@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import request from 'supertest';
 import { createApp } from '../src/app';
+import type { ProductDto } from '../src/dtos/product';
 
 test('GET /products returns products with their images', async () => {
   const products = [
@@ -15,7 +16,12 @@ test('GET /products returns products with their images', async () => {
       weight: 1.5,
       deletedAt: null,
       productImages: [
-        { imageID: 'image-1', productID: 'product-1', imageUrl: '/images/product-1.svg' },
+        {
+          imageID: 'image-1',
+          productID: 'product-1',
+          imageUrl: '/images/product-1.svg',
+          imageOrder: 0,
+        },
       ],
     },
     {
@@ -53,4 +59,56 @@ test('GET /products reports database failures as server errors', async () => {
   });
 
   await request(app).get('/products').expect(500);
+});
+
+test('GET /products/:productID returns the selected product with images', async () => {
+  const product: ProductDto = {
+    productID: 'product-1',
+    name: 'Example product',
+    description: 'Details',
+    quantity: 5,
+    draft: false,
+    visible: true,
+    weight: 1.5,
+    deletedAt: null,
+    productImages: [
+      {
+        imageID: 'image-1',
+        productID: 'product-1',
+        imageUrl: '/images/product-1.svg',
+        imageOrder: 0,
+      },
+    ],
+  };
+  const app = createApp(
+    async () => [],
+    undefined,
+    async (id) => {
+      assert.equal(id, 'product-1');
+      return product;
+    },
+  );
+  const response = await request(app).get('/products/product-1').expect(200);
+  assert.deepEqual(response.body, { product });
+});
+
+test('GET /products/:productID returns 404 for an unknown product', async () => {
+  const app = createApp(
+    async () => [],
+    undefined,
+    async () => null,
+  );
+  const response = await request(app).get('/products/missing').expect(404);
+  assert.deepEqual(response.body, { error: 'Product not found' });
+});
+
+test('GET /products/:productID propagates database failures', async () => {
+  const app = createApp(
+    async () => [],
+    undefined,
+    async () => {
+      throw new Error('Database unavailable');
+    },
+  );
+  await request(app).get('/products/product-1').expect(500);
 });

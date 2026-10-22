@@ -85,7 +85,14 @@ The unit tests use injected fixtures and do not require this seed or a database.
 
 `GET /products` returns `{ "products": [...] }`. Each product includes its
 `productImages` array, which is empty when the product has no images.
+Each image includes `imageID`, `productID`, `imageUrl`, and its integer
+`imageOrder`. Both the catalogue and single-product endpoints preserve the
+stored order value so clients can sort images and select order 0 as the main image.
 An empty database returns `{ "products": [] }`.
+
+`GET /products/:productID` queries one product by ID, including its images,
+and returns `{ "product": {...} }`. An unknown ID returns `404` with
+`{ "error": "Product not found" }`. Database failures propagate as server errors.
 
 ```sh
 curl http://localhost:3000/products

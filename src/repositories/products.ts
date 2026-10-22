@@ -11,3 +11,12 @@ export async function findProducts(): Promise<ProductWithImages[]> {
     include: { productImages: true },
   });
 }
+
+export async function findProduct(productID: string): Promise<ProductWithImages | null> {
+  const { prisma } = await import('../prismaClient');
+
+  return prisma.product.findUnique({
+    where: { productID },
+    include: { productImages: true },
+  });
+}
