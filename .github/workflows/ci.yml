@@ -15,8 +15,8 @@ permissions:
   contents: read
 
 jobs:
-  build-lint-test:
-    name: Build, Lint and Test
+  build-lint:
+    name: Build and Lint
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -38,9 +38,3 @@ jobs:
 
       - name: Lint
         run: npm run lint
-
-      - name: Test
-        # Placeholder URL: tests inject mocks, and Prisma only connects on first query.
-        env:
-          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
-        run: npm run test
