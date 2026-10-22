@@ -2,6 +2,7 @@ export interface ProductImageDto {
   imageID: string;
   productID: string;
   imageUrl: string;
+  imageOrder: number;
 }
 
 export interface ProductDto {
@@ -18,4 +19,8 @@ export interface ProductDto {
 
 export interface ProductsResponseDto {
   products: ProductDto[];
+}
+
+export interface ProductResponseDto {
+  product: ProductDto;
 }
