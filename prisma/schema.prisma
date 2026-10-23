@@ -17,10 +17,11 @@ model Product {
   weight      Float
   deletedAt   DateTime?
 
-  productImages ProductImage[]
-  productPrices ProductPrices[]
-  basketItems   BasketItem[]
-  orderItems    OrderItem[]
+  productImages     ProductImage[]
+  productPrices     ProductPrices[]
+  basketItems       BasketItem[]
+  orderItems        OrderItem[]
+  productCategories ProductCategories[]
 }
 
 model ProductImage {
