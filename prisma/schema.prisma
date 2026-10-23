@@ -19,6 +19,8 @@ model Product {
 
   productImages ProductImage[]
   productPrices ProductPrices[]
+  basketItems   BasketItem[]
+  orderItems    OrderItem[]
 }
 
 model ProductImage {
@@ -48,32 +50,70 @@ model Customer {
   postcode     String
   passwordHash String
 
+  basketItems BasketItem[]
+  orders      Order[]
+
   createdAt DateTime @default(now())
 }
+
 model Admin {
-    adminID      String  @id @default(uuid())
-    email        String  @unique
-    firstname    String
-    surname      String
-    username     String  @unique
-    passwordHash String
-    addressLine1 String
-    addressLine2 String?
-    postcode     String
- 
-    roleID String?
- 
-    role      Role?    @relation(fields: [roleID], references: [roleID], onDelete: SetNull, onUpdate: Cascade)
-    createdAt DateTime @default(now())
+  adminID      String  @id @default(uuid())
+  email        String  @unique
+  firstname    String
+  surname      String
+  username     String  @unique
+  passwordHash String
+  addressLine1 String
+  addressLine2 String?
+  postcode     String
+
+  roleID String?
+
+  role      Role?    @relation(fields: [roleID], references: [roleID], onDelete: SetNull, onUpdate: Cascade)
+  createdAt DateTime @default(now())
 }
 
 model Role {
-    roleID      String  @id @default(uuid())
-    name        String  @unique
-    description String?
-    accessLevel Int
- 
-    createdAt DateTime @default(now())
- 
-    admins Admin[]
+  roleID      String  @id @default(uuid())
+  name        String  @unique
+  description String?
+  accessLevel Int
+
+  createdAt DateTime @default(now())
+
+  admins Admin[]
+}
+
+model BasketItem {
+  basketItemID String   @id @default(uuid())
+  customerID   String
+  productID    String
+  quantity     Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  customer Customer @relation(fields: [customerID], references: [customerID], onDelete: Cascade, onUpdate: Cascade)
+  product  Product  @relation(fields: [productID], references: [productID], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([customerID, productID])
+}
+
+model Order {
+  orderID    String   @id @default(uuid())
+  customerID String
+  createdAt  DateTime @default(now())
+
+  customer   Customer    @relation(fields: [customerID], references: [customerID], onDelete: Restrict, onUpdate: Cascade)
+  orderItems OrderItem[]
+}
+
+model OrderItem {
+  orderItemID String  @id @default(uuid())
+  orderID     String
+  productID   String
+  quantity    Int
+  unitPrice   Decimal @db.Decimal(10, 2)
+
+  order   Order   @relation(fields: [orderID], references: [orderID], onDelete: Cascade, onUpdate: Cascade)
+  product Product @relation(fields: [productID], references: [productID], onDelete: Restrict, onUpdate: Cascade)
 }
