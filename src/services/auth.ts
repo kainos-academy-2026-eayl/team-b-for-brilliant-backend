@@ -1,4 +1,4 @@
-import { findCustomerByEmail } from '../repositories/customers';
+import { findCustomerByEmail } from '../models/customers';
 import { verifyPassword } from '../utils/password';
 
 export type VerifyCredentialsResult =
