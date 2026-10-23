@@ -1,7 +1,6 @@
 import { resolve } from 'node:path';
-import express, { type Express, type Request, type Response } from 'express';
-import { authServices, createAuthRouter } from './controllers/auth';
 import express, { type Express, type Request, type RequestHandler, type Response } from 'express';
+import { authServices, createAuthRouter } from './controllers/auth';
 import { basketRouter } from './controllers/basket';
 import { bookingsRouter } from './controllers/bookings';
 import { checkoutRouter } from './controllers/checkout';
