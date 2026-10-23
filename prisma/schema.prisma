@@ -73,11 +73,13 @@ model ProductCategories {
 model Customer {
   customerID   String  @id @default(uuid())
   email        String  @unique
-  firstname    String
-  surname      String
-  addressLine1 String
+  firstname    String?
+  surname      String?
+  addressLine1 String?
   addressLine2 String?
-  postcode     String
+  postcode     String?
+  emailVerified Boolean @default(false)
+  verificationTokens EmailVerificationToken[]
   passwordHash String
   mfaEnabled   Boolean @default(false)
 
@@ -147,4 +149,15 @@ model OrderItem {
 
   order   Order   @relation(fields: [orderID], references: [orderID], onDelete: Cascade, onUpdate: Cascade)
   product Product @relation(fields: [productID], references: [productID], onDelete: Restrict, onUpdate: Cascade)
+}
+
+model EmailVerificationToken {
+  tokenID    String    @id @default(uuid())
+  tokenHash  String    @unique
+  customerID String
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  customer Customer @relation(fields: [customerID], references: [customerID], onDelete: Cascade)
 }
