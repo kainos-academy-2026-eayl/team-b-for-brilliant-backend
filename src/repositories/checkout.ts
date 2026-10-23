@@ -1,0 +1,77 @@
+import { HttpError } from '../errors/httpError';
+import { lockCustomer } from './customerLock';
+
+export async function completeCheckout(customerID: string): Promise<{ orderID: string }> {
+  const { prisma } = await import('../prismaClient');
+
+  return prisma.$transaction(async (tx) => {
+    // A second checkout for this customer waits here, then sees the already-cleared basket
+    await lockCustomer(tx, customerID);
+
+    const basketItems = await tx.basketItem.findMany({
+      where: { customerID },
+      include: { product: true },
+    });
+
+    if (basketItems.length === 0) {
+      throw new HttpError(400, 'Your basket is empty');
+    }
+
+    const order = await tx.order.create({
+      data: { customerID },
+      select: { orderID: true },
+    });
+
+    for (const item of basketItems) {
+      const { product } = item;
+
+      if (!product.visible || product.draft || product.deletedAt !== null) {
+        throw new HttpError(409, `${product.name} is no longer available`);
+      }
+
+      const latestPrice = await tx.productPrices.findFirst({
+        where: { productID: item.productID },
+        orderBy: [{ createdAt: 'desc' }, { priceID: 'desc' }],
+      });
+
+      if (!latestPrice) {
+        throw new HttpError(409, `${product.name} has no price`);
+      }
+
+      // Only takes stock if enough is left; count 0 means someone else bought it first
+      const stockUpdate = await tx.product.updateMany({
+        where: { productID: item.productID, quantity: { gte: item.quantity } },
+        data: { quantity: { decrement: item.quantity } },
+      });
+
+      if (stockUpdate.count === 0) {
+        throw new HttpError(409, `Not enough ${product.name} in stock`);
+      }
+
+      await tx.orderItem.create({
+        data: {
+          orderID: order.orderID,
+          productID: item.productID,
+          quantity: item.quantity,
+          unitPrice: latestPrice.price,
+        },
+      });
+    }
+
+    const soldOut = await tx.product.findMany({
+      where: {
+        productID: { in: basketItems.map((item) => item.productID) },
+        quantity: 0,
+      },
+      select: { productID: true },
+    });
+
+    await tx.basketItem.deleteMany({
+      where: {
+        OR: [{ customerID }, { productID: { in: soldOut.map((product) => product.productID) } }],
+      },
+    });
+
+    return { orderID: order.orderID };
+  });
+}

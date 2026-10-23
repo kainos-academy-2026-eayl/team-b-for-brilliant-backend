@@ -17,9 +17,10 @@ model Product {
   weight      Float
   deletedAt   DateTime?
 
-  productImages     ProductImage[]
-  productPrices     ProductPrices[]
-  productCategories ProductCategories[]
+  productImages ProductImage[]
+  productPrices ProductPrices[]
+  basketItems   BasketItem[]
+  orderItems    OrderItem[]
 }
 
 model ProductImage {
@@ -78,6 +79,9 @@ model Customer {
   postcode     String
   passwordHash String
 
+  basketItems BasketItem[]
+  orders      Order[]
+
   createdAt DateTime @default(now())
 }
 
@@ -107,4 +111,38 @@ model Role {
   createdAt DateTime @default(now())
 
   admins Admin[]
+}
+
+model BasketItem {
+  basketItemID String   @id @default(uuid())
+  customerID   String
+  productID    String
+  quantity     Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  customer Customer @relation(fields: [customerID], references: [customerID], onDelete: Cascade, onUpdate: Cascade)
+  product  Product  @relation(fields: [productID], references: [productID], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([customerID, productID])
+}
+
+model Order {
+  orderID    String   @id @default(uuid())
+  customerID String
+  createdAt  DateTime @default(now())
+
+  customer   Customer    @relation(fields: [customerID], references: [customerID], onDelete: Restrict, onUpdate: Cascade)
+  orderItems OrderItem[]
+}
+
+model OrderItem {
+  orderItemID String  @id @default(uuid())
+  orderID     String
+  productID   String
+  quantity    Int
+  unitPrice   Decimal @db.Decimal(10, 2)
+
+  order   Order   @relation(fields: [orderID], references: [orderID], onDelete: Cascade, onUpdate: Cascade)
+  product Product @relation(fields: [productID], references: [productID], onDelete: Restrict, onUpdate: Cascade)
 }
