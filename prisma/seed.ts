@@ -7,7 +7,8 @@ async function main() {
       {
         productID: 'product-1',
         name: 'Hyaluronic Acid Serum',
-        description: 'Deep hydrating serum with hyaluronic acid, plumps skin for a glowing complexion',
+        description:
+          'Deep hydrating serum with hyaluronic acid, plumps skin for a glowing complexion',
         quantity: 30,
         draft: false,
         visible: true,
@@ -51,7 +52,8 @@ async function main() {
       {
         productID: 'product-5',
         name: 'Liquid Lipstick Set',
-        description: 'Set of 12 liquid lipsticks in various shades, waterproof long-lasting formula',
+        description:
+          'Set of 12 liquid lipsticks in various shades, waterproof long-lasting formula',
         quantity: 35,
         draft: false,
         visible: true,
@@ -95,7 +97,8 @@ async function main() {
       {
         productID: 'product-9',
         name: 'Bone Smashing Hammer',
-        description: 'Professional-grade titanium bone smashing hammer for looksmaxxing, ergonomic design',
+        description:
+          'Professional-grade titanium bone smashing hammer for looksmaxxing, ergonomic design',
         quantity: 5,
         draft: false,
         visible: true,
@@ -162,23 +165,77 @@ async function main() {
 
     // Add product images for all products
     const images = [
-      { imageID: 'image-1', productID: 'product-1', imageUrl: '/images/product-1.svg', imageOrder: 0 },
-      { imageID: 'image-2', productID: 'product-2', imageUrl: '/images/product-2.svg', imageOrder: 0 },
-      { imageID: 'image-3', productID: 'product-3', imageUrl: '/images/product-3.svg', imageOrder: 0 },
-      { imageID: 'image-4', productID: 'product-4', imageUrl: '/images/product-4.svg', imageOrder: 0 },
-      { imageID: 'image-5', productID: 'product-5', imageUrl: '/images/product-5.svg', imageOrder: 0 },
-      { imageID: 'image-6', productID: 'product-6', imageUrl: '/images/product-6.svg', imageOrder: 0 },
-      { imageID: 'image-7', productID: 'product-7', imageUrl: '/images/product-7.svg', imageOrder: 0 },
-      { imageID: 'image-8', productID: 'product-8', imageUrl: '/images/product-8.svg', imageOrder: 0 },
-      { imageID: 'image-9', productID: 'product-9', imageUrl: '/images/product-9.svg', imageOrder: 0 },
-      { imageID: 'image-10', productID: 'product-10', imageUrl: '/images/product-10.svg', imageOrder: 0 },
+      {
+        imageID: 'image-1',
+        productID: 'product-1',
+        imageUrl: '/images/product-1.svg',
+        imageOrder: 0,
+      },
+      {
+        imageID: 'image-2',
+        productID: 'product-2',
+        imageUrl: '/images/product-2.svg',
+        imageOrder: 0,
+      },
+      {
+        imageID: 'image-3',
+        productID: 'product-3',
+        imageUrl: '/images/product-3.svg',
+        imageOrder: 0,
+      },
+      {
+        imageID: 'image-4',
+        productID: 'product-4',
+        imageUrl: '/images/product-4.svg',
+        imageOrder: 0,
+      },
+      {
+        imageID: 'image-5',
+        productID: 'product-5',
+        imageUrl: '/images/product-5.svg',
+        imageOrder: 0,
+      },
+      {
+        imageID: 'image-6',
+        productID: 'product-6',
+        imageUrl: '/images/product-6.svg',
+        imageOrder: 0,
+      },
+      {
+        imageID: 'image-7',
+        productID: 'product-7',
+        imageUrl: '/images/product-7.svg',
+        imageOrder: 0,
+      },
+      {
+        imageID: 'image-8',
+        productID: 'product-8',
+        imageUrl: '/images/product-8.svg',
+        imageOrder: 0,
+      },
+      {
+        imageID: 'image-9',
+        productID: 'product-9',
+        imageUrl: '/images/product-9.svg',
+        imageOrder: 0,
+      },
+      {
+        imageID: 'image-10',
+        productID: 'product-10',
+        imageUrl: '/images/product-10.svg',
+        imageOrder: 0,
+      },
     ];
 
     for (const image of images) {
       await transaction.productImage.upsert({
         where: { imageID: image.imageID },
         create: image,
-        update: { productID: image.productID, imageUrl: image.imageUrl, imageOrder: image.imageOrder },
+        update: {
+          productID: image.productID,
+          imageUrl: image.imageUrl,
+          imageOrder: image.imageOrder,
+        },
       });
     }
 
