@@ -1,45 +1,8 @@
--- CreateTable
-CREATE TABLE "Customer" (
-    "customerID" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
-    "firstname" TEXT NOT NULL,
-    "surname" TEXT NOT NULL,
-    "addressLine1" TEXT NOT NULL,
-    "addressLine2" TEXT,
-    "postcode" TEXT NOT NULL,
-    "passwordHash" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- AlterTable
+ALTER TABLE "Customer" ADD COLUMN     "mfaEnabled" BOOLEAN NOT NULL DEFAULT false;
 
-    CONSTRAINT "Customer_pkey" PRIMARY KEY ("customerID")
-);
-
--- CreateTable
-CREATE TABLE "Admin" (
-    "adminID" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
-    "firstname" TEXT NOT NULL,
-    "surname" TEXT NOT NULL,
-    "username" TEXT NOT NULL,
-    "passwordHash" TEXT NOT NULL,
-    "addressLine1" TEXT NOT NULL,
-    "addressLine2" TEXT,
-    "postcode" TEXT NOT NULL,
-    "roleID" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "Admin_pkey" PRIMARY KEY ("adminID")
-);
-
--- CreateTable
-CREATE TABLE "Role" (
-    "roleID" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "description" TEXT,
-    "accessLevel" INTEGER NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "Role_pkey" PRIMARY KEY ("roleID")
-);
+-- AlterTable
+ALTER TABLE "Product" ADD COLUMN     "salesNo" INTEGER NOT NULL DEFAULT 0;
 
 -- CreateTable
 CREATE TABLE "BasketItem" (
@@ -74,22 +37,7 @@ CREATE TABLE "OrderItem" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Customer_email_key" ON "Customer"("email");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Admin_email_key" ON "Admin"("email");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Admin_username_key" ON "Admin"("username");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Role_name_key" ON "Role"("name");
-
--- CreateIndex
 CREATE UNIQUE INDEX "BasketItem_customerID_productID_key" ON "BasketItem"("customerID", "productID");
-
--- AddForeignKey
-ALTER TABLE "Admin" ADD CONSTRAINT "Admin_roleID_fkey" FOREIGN KEY ("roleID") REFERENCES "Role"("roleID") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "BasketItem" ADD CONSTRAINT "BasketItem_customerID_fkey" FOREIGN KEY ("customerID") REFERENCES "Customer"("customerID") ON DELETE CASCADE ON UPDATE CASCADE;

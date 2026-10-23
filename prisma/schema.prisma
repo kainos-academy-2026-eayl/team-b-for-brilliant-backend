@@ -15,6 +15,7 @@ model Product {
   draft       Boolean   @default(true)
   visible     Boolean   @default(false)
   weight      Float
+  salesNo     Int       @default(0)
   deletedAt   DateTime?
 
   productImages     ProductImage[]
