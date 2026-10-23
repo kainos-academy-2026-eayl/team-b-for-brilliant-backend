@@ -5,3 +5,5 @@ src/generated
 .agents/skills
 .claude/skills
 .windsurf/skills
+prisma/migrations/.DS_Store
+prisma/.DS_Store

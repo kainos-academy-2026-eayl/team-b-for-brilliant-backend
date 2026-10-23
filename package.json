@@ -17,7 +17,8 @@
     "prisma:seed": "npm run prisma:generate && prisma db seed",
     "pretypecheck": "npm run prisma:generate",
     "typecheck": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "test": "node --import tsx --test tests/*.test.ts"
   },
   "keywords": [],
   "author": "John & Luke",
@@ -26,9 +27,11 @@
     "@biomejs/biome": "2.5.15",
     "@types/express": "5.0.6",
     "@types/node": "26.4.1",
+    "@types/supertest": "7.2.1",
     "esbuild": "0.28.2",
     "husky": "9.1.7",
     "prisma": "7.10.1",
+    "supertest": "7.3.1",
     "tsx": "4.23.13",
     "typescript": "7.0.2"
   },
