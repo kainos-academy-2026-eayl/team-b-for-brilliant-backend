@@ -15,10 +15,10 @@
     "prisma:migrate": "prisma migrate dev && npm run prisma:generate",
     "prisma:studio": "prisma studio",
     "prisma:seed": "npm run prisma:generate && prisma db seed",
-    "test": "node --import tsx --test src/*.test.ts tests/*.test.ts",
     "pretypecheck": "npm run prisma:generate",
     "typecheck": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "test": "node --import tsx --test tests/*.test.ts"
   },
   "keywords": [],
   "author": "John & Luke",

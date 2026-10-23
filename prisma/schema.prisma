@@ -79,6 +79,7 @@ model Customer {
   addressLine2 String?
   postcode     String
   passwordHash String
+  mfaEnabled   Boolean @default(false)
 
   basketItems BasketItem[]
   orders      Order[]
