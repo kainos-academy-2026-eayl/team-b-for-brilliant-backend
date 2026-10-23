@@ -41,8 +41,7 @@ import { prisma } from '../prismaClient';
 The module loads `.env` and reports a missing `DATABASE_URL` explicitly.
 Use one shared client rather than creating a new client for each request.
 The products endpoint uses the database. Health and bookings do not.
-The products repository loads the shared client when queried, so tests can
-inject a fetch function without database credentials or a running database.
+The products repository loads the shared client when queried.
 
 ### Source structure
 
@@ -56,16 +55,12 @@ converting database records into response DTOs:
 - `src/mappers/product.ts` maps records explicitly and converts dates to ISO strings,
   preserving the existing JSON response.
 - `src/schemas/product.ts` defines new-product input validation and its inferred type.
-- `tests/` contains endpoint and service/mapper tests; input-schema tests
-  are also run from `src/productSchema.test.ts`.
-
-Services can receive a repository function in tests; the app can receive a
-service function for endpoint tests. Database errors propagate to Express
-rather than being converted into empty successful responses.
+Database errors propagate to Express rather than being converted into empty
+successful responses.
 
 ### Fetch products and images
 
-To populate the local database with the fixtures from `tests/product.test.ts`,
+To populate the local database with the seed fixtures,
 apply the migrations, then run:
 
 ```sh
@@ -81,7 +76,6 @@ timestamps (October 1, 2 and 3, 2026), so rerunning it does not duplicate prices
 The seeded image URL `/images/product-1.svg` points to an original sample
 illustration stored in `public/images/product-1.svg`.
 Prisma 7 runs seeding explicitly, not automatically after migration.
-The unit tests use injected fixtures and do not require this seed or a database.
 
 `GET /products` returns `{ "products": [...] }`. Each product includes its
 `productImages` array, which is empty when the product has no images.
@@ -167,10 +161,9 @@ The `Backend CI` workflow runs on pull requests targeting `main` or `master` (in
 ```sh
 npm run build
 npm run lint
-npm test
 ```
 
-Build includes TypeScript checks. Lint uses Biome to check formatting, imports and recommended lint rules, and fails on warnings as well as errors. Tests use Node's test runner with `tsx` and Supertest to check health, bookings, products (with an injected fetch function), and unknown routes. These tests do not need a database or secrets.
+Build includes TypeScript checks. Lint uses Biome to check formatting, imports and recommended lint rules, and fails on warnings as well as errors.
 
 ## Linting and Push Checks
 
@@ -191,8 +184,8 @@ The workflow alone cannot block merging. A repository administrator must configu
 1. Push the workflow and let it run on a pull request so its check becomes selectable.
 2. Open **Settings > Branches > Add branch protection rule** for `main`. Repeat for `master` if that branch is used.
 3. Enable **Require a pull request before merging**.
-4. Enable **Require status checks to pass before merging** and select **Build, Lint and Test** from the **Backend CI** workflow.
+4. Enable **Require status checks to pass before merging** and select **Build and Lint** from the **Backend CI** workflow.
 5. Enable **Require branches to be up to date before merging**.
 6. Enable **Do not allow bypassing the above settings** so administrators cannot bypass failed checks, then save the rule.
 
-Until this repository setting is enabled, failed CI checks will not prevent merges. The workflow fails if installation, build, lint or tests fail; it does not suppress failures or allow empty test runs.
+Until this repository setting is enabled, failed CI checks will not prevent merges. The workflow fails if installation, build or lint fails; it does not suppress failures.

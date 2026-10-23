@@ -81,6 +81,7 @@ model Customer {
   emailVerified Boolean @default(false)
   verificationTokens EmailVerificationToken[]
   passwordHash String
+  mfaEnabled   Boolean @default(false)
 
   basketItems BasketItem[]
   orders      Order[]

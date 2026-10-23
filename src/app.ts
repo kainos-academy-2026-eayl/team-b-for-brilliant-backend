@@ -1,6 +1,7 @@
 import { resolve } from 'node:path';
 import cors from 'cors';
 import express, { type Express, type Request, type RequestHandler, type Response } from 'express';
+import { authServices, createAuthRouter } from './controllers/auth';
 import { basketRouter } from './controllers/basket';
 import { bookingsRouter } from './controllers/bookings';
 import { checkoutRouter } from './controllers/checkout';
@@ -13,6 +14,7 @@ import { getProduct, getProducts } from './services/products';
 export function createApp(
   fetchProducts: () => Promise<ProductDto[]> = getProducts,
   prices = productPriceServices,
+  auth = authServices,
   fetchProduct: (productID: string) => Promise<ProductDto | null> = getProduct,
   authenticate: RequestHandler = authenticateCustomer,
 ): Express {
@@ -27,6 +29,7 @@ export function createApp(
     res.json({ status: 'ok', uptime: process.uptime() });
   });
 
+  app.use('/auth', createAuthRouter(auth));
   app.use('/bookings', bookingsRouter);
   app.use('/products', createProductsRouter(fetchProducts, prices, fetchProduct));
   app.use('/basket', authenticate, basketRouter);
