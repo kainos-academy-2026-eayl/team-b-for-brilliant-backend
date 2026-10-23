@@ -26,6 +26,7 @@ export interface ProductDto {
   draft: boolean;
   visible: boolean;
   weight: number;
+  salesNo: number;
   deletedAt: string | null;
   productImages: ProductImageDto[];
   categories: CategoryDto[];

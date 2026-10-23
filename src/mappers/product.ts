@@ -15,6 +15,7 @@ export function toProductDto(product: ProductWithRelations): ProductDto {
     draft: product.draft,
     visible: product.visible,
     weight: product.weight,
+    salesNo: product.salesNo,
     deletedAt: product.deletedAt?.toISOString() ?? null,
     productImages: product.productImages.map((image) => ({
       imageID: image.imageID,
