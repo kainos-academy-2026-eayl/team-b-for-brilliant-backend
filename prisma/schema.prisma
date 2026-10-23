@@ -17,10 +17,11 @@ model Product {
   weight      Float
   deletedAt   DateTime?
 
-  productImages ProductImage[]
-  productPrices ProductPrices[]
-  basketItems   BasketItem[]
-  orderItems    OrderItem[]
+  productImages     ProductImage[]
+  productPrices     ProductPrices[]
+  basketItems       BasketItem[]
+  orderItems        OrderItem[]
+  productCategories ProductCategories[]
 }
 
 model ProductImage {
@@ -38,6 +39,35 @@ model ProductPrices {
   createdAt DateTime @default(now())
 
   product Product @relation(fields: [productID], references: [productID], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model Department {
+  departmentID String  @id @default(uuid())
+  name         String
+  description  String?
+
+  categories Category[]
+}
+
+model Category {
+  categoryID   String  @id @default(uuid())
+  name         String
+  description  String?
+  departmentID String
+
+  department Department @relation(fields: [departmentID], references: [departmentID], onDelete: Cascade, onUpdate: Cascade)
+
+  products ProductCategories[]
+}
+
+model ProductCategories {
+  productID  String
+  categoryID String
+
+  product  Product  @relation(fields: [productID], references: [productID], onDelete: Cascade, onUpdate: Cascade)
+  category Category @relation(fields: [categoryID], references: [categoryID], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([productID, categoryID])
 }
 
 model Customer {

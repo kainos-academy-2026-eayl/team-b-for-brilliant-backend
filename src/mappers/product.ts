@@ -1,7 +1,12 @@
 import type { ProductDto } from '../dtos/product';
-import type { ProductWithImages } from '../repositories/products';
+import type { ProductWithRelations } from '../repositories/products';
 
-export function toProductDto(product: ProductWithImages): ProductDto {
+export function toProductDto(product: ProductWithRelations): ProductDto {
+  const categories = product.productCategories.map(({ category }) => category);
+  const departments = new Map(
+    categories.map(({ department }) => [department.departmentID, department]),
+  );
+
   return {
     productID: product.productID,
     name: product.name,
@@ -16,6 +21,17 @@ export function toProductDto(product: ProductWithImages): ProductDto {
       productID: image.productID,
       imageUrl: image.imageUrl,
       imageOrder: image.imageOrder,
+    })),
+    categories: categories.map((category) => ({
+      categoryID: category.categoryID,
+      name: category.name,
+      description: category.description,
+      departmentID: category.departmentID,
+    })),
+    departments: Array.from(departments.values()).map((department) => ({
+      departmentID: department.departmentID,
+      name: department.name,
+      description: department.description,
     })),
   };
 }
