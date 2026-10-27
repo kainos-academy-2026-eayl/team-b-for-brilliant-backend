@@ -241,7 +241,7 @@ async function main() {
 
     // Test-only customer; the password is "password".
     const customer = {
-      customerID: 'C03859',
+      userID: 'C03859',
       email: 'customer@gmail.com',
       firstname: 'Customer',
       surname: 'One',
@@ -249,12 +249,11 @@ async function main() {
       addressLine2: 'Belfast',
       postcode: 'BT7 1NT',
       passwordHash: await hashPassword('password'),
-      mfaEnabled: false,
     };
-    const { customerID, ...customerData } = customer;
+    const { userID, ...customerData } = customer;
 
-    await transaction.customer.upsert({
-      where: { customerID },
+    await transaction.user.upsert({
+      where: { userID },
       create: customer,
       update: customerData,
     });

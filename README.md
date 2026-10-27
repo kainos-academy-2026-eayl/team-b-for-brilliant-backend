@@ -175,6 +175,14 @@ New and already-registered addresses both receive HTTP 202 with
 account exists. Invalid input returns HTTP 400; registration failures return
 HTTP 500. The former verification and resend-verification endpoints are removed.
 
+### Credential verification
+
+`POST /auth/verify` accepts an email address and password. Valid credentials return
+HTTP 200 with `{ "customerId": "<userID>" }`; no MFA flag is queried or returned.
+The `customerId` response key is retained for compatibility with the frontend,
+while the account is stored in the `User` table. Incorrect passwords return
+HTTP 401, unknown accounts return HTTP 404, and invalid input returns HTTP 400.
+
 ## Backend CI
 
 The `Backend CI` workflow runs on pull requests targeting `main` or `master` (including new commits and reopened PRs), and on pushes to either branch, including merges. It installs dependencies using `npm ci`, then runs:
