@@ -32,6 +32,15 @@ and then the npm script generates a client matching your models (Prisma 7
 does not generate it automatically during migrations). Commit the schema and migrations
 with the feature. Do not reset an existing database just to set up Prisma.
 
+The categories migration has been restored to its original applied contents,
+including creation of the original account tables. Do not remove statements from
+already-applied migrations: it breaks both checksum validation and fresh setup.
+The `20261027142300_unify_users_and_baskets` migration preserves account IDs,
+password hashes, admin roles, baskets and order links while matching the current
+schema. It rejects conflicting customer/admin IDs or email addresses instead of
+merging accounts silently. Removed verification/MFA fields and admin usernames
+are not retained in the new schema.
+
 Import the shared client from `src/prismaClient.ts` in your repositories:
 
 ```ts
