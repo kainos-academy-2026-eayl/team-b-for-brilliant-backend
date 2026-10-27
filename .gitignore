@@ -7,3 +7,6 @@ src/generated
 .windsurf/skills
 prisma/migrations/.DS_Store
 prisma/.DS_Store
+public/images/.DS_Store
+public/.DS_Store
+.DS_Store
