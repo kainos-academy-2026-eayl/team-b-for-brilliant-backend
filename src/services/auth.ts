@@ -2,9 +2,9 @@ import { findCustomerByEmail } from '../models/customers';
 import { verifyPassword } from '../utils/password';
 
 export type VerifyCredentialsResult =
-  | { status: 'valid'; userID: string; }
-  | { status: 'invalid'; }
-  | { status: 'not_found'; };
+  | { status: 'valid'; userID: string }
+  | { status: 'invalid' }
+  | { status: 'not_found' };
 
 export async function verifyCredentials(
   email: string,
