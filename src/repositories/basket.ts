@@ -2,7 +2,7 @@ import type { Prisma } from '../generated/prisma/client';
 import { lockCustomer } from './customerLock';
 
 export type BasketItemWithProduct = Prisma.BasketGetPayload<{
-  include: { product: true; };
+  include: { product: true };
 }>;
 
 export async function findBasketItems(userID: string): Promise<BasketItemWithProduct[]> {

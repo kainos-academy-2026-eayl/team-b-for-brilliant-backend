@@ -1,7 +1,7 @@
 import { HttpError } from '../errors/httpError';
 import { lockCustomer } from './customerLock';
 
-export async function completeCheckout(userID: string): Promise<{ orderID: string; }> {
+export async function completeCheckout(userID: string): Promise<{ orderID: string }> {
   const { prisma } = await import('../prismaClient');
 
   return prisma.$transaction(async (tx) => {
