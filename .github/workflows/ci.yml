@@ -39,7 +39,7 @@ jobs:
       - name: Lint Fix
         run: npm run lint:fix
 
-      - name: Lint Fix
+      - name: Lint
         run: npm run lint
 
       - name: Test
