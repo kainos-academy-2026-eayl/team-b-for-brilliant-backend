@@ -20,12 +20,13 @@ function createFakeRepo(stock: number, quantityInBasket?: number): BasketReposit
     draft: false,
     visible: true,
     weight: 1,
+    salesNo: 0,
     deletedAt: null,
   };
 
   const toItem = (quantity: number): BasketItemWithProduct => ({
-    basketItemID: 'item-1',
-    customerID: 'customer-1',
+    basketID: 'item-1',
+    userID: 'customer-1',
     productID: 'product-1',
     quantity,
     createdAt: new Date(),

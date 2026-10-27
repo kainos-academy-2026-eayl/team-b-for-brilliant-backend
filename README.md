@@ -154,6 +154,18 @@ Unknown properties, including IDs, deletion timestamps and images, are stripped
 from validated data. Always use the validated `data`, not the original input.
 This is input validation only: it does not save products or add a POST endpoint.
 
+### Registration
+
+`POST /api/v1/auth/register` accepts an email address and a password of 8 to
+1024 characters. Email addresses are trimmed and lowercased before storage.
+Passwords are hashed before the account is created. Registration does not send
+email or require an email-verification token.
+
+New and already-registered addresses both receive HTTP 202 with
+`{ "message": "Registration request processed" }` to avoid revealing whether an
+account exists. Invalid input returns HTTP 400; registration failures return
+HTTP 500. The former verification and resend-verification endpoints are removed.
+
 ## Backend CI
 
 The `Backend CI` workflow runs on pull requests targeting `main` or `master` (including new commits and reopened PRs), and on pushes to either branch, including merges. It installs dependencies using `npm ci`, then runs:

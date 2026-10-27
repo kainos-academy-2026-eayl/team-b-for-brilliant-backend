@@ -10,19 +10,30 @@ datasource db {
 model User {
   userID       String  @id @default(uuid())
   email        String  @unique
-  firstname    String
-  surname      String
-  addressLine1 String
+  firstname    String?
+  surname      String?
+  addressLine1 String?
   addressLine2 String?
-  postcode     String
+  postcode     String?
   passwordHash String
 
   createdAt DateTime @default(now())
 
   roleID String?
+  role   Role?   @relation(fields: [roleID], references: [roleID], onDelete: SetNull, onUpdate: Cascade)
 
-  role    Role?    @relation(fields: [roleID], references: [roleID], onDelete: SetNull, onUpdate: Cascade)
-  baskets Basket[]
+  securityQuestionID String?
+  securityQuestion   SecurityQuestion? @relation(fields: [securityQuestionID], references: [questionID], onDelete: SetNull, onUpdate: Cascade)
+  securityAnswer     String?
+  baskets            Basket[]
+  orders             Order[]
+}
+
+model SecurityQuestion {
+  questionID String @id @default(uuid())
+  question   String
+
+  users User[]
 }
 
 model Product {
@@ -33,30 +44,56 @@ model Product {
   draft       Boolean   @default(true)
   visible     Boolean   @default(false)
   weight      Float
+  salesNo     Int       @default(0)
   deletedAt   DateTime?
 
-  baskets       Basket[]
-  categories    ProductCategories[]
-  prices        ProductPrices[]
-  productImages ProductImage[]
+  baskets           Basket[]
+  orderItems        OrderItem[]
+  productCategories ProductCategories[]
+  productPrices     ProductPrices[]
+  productImages     ProductImage[]
 }
 
 model ProductImage {
-  imageID   String  @id @default(uuid())
-  productID String
-  imageUrl  String
-  product   Product @relation(fields: [productID], references: [productID], onDelete: Cascade, onUpdate: Cascade)
+  imageID    String  @id @default(uuid())
+  productID  String
+  imageUrl   String
+  imageOrder Int
+  product    Product @relation(fields: [productID], references: [productID], onDelete: Cascade, onUpdate: Cascade)
 }
 
 model Basket {
+  basketID  String   @id @default(uuid())
   userID    String
   productID String
   quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user    User    @relation(fields: [userID], references: [userID], onDelete: Cascade, onUpdate: Cascade)
   product Product @relation(fields: [productID], references: [productID], onDelete: Cascade, onUpdate: Cascade)
 
-  @@id([userID, productID])
+  @@unique([userID, productID])
+}
+
+model Order {
+  orderID   String   @id @default(uuid())
+  userID    String
+  createdAt DateTime @default(now())
+
+  user       User        @relation(fields: [userID], references: [userID], onDelete: Restrict, onUpdate: Cascade)
+  orderItems OrderItem[]
+}
+
+model OrderItem {
+  orderItemID String  @id @default(uuid())
+  orderID     String
+  productID   String
+  quantity    Int
+  unitPrice   Decimal @db.Decimal(10, 2)
+
+  order   Order   @relation(fields: [orderID], references: [orderID], onDelete: Cascade, onUpdate: Cascade)
+  product Product @relation(fields: [productID], references: [productID], onDelete: Restrict, onUpdate: Cascade)
 }
 
 model Department {

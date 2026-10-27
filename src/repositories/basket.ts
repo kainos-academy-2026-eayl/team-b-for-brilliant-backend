@@ -1,15 +1,15 @@
 import type { Prisma } from '../generated/prisma/client';
 import { lockCustomer } from './customerLock';
 
-export type BasketItemWithProduct = Prisma.BasketItemGetPayload<{
-  include: { product: true };
+export type BasketItemWithProduct = Prisma.BasketGetPayload<{
+  include: { product: true; };
 }>;
 
-export async function findBasketItems(customerID: string): Promise<BasketItemWithProduct[]> {
+export async function findBasketItems(userID: string): Promise<BasketItemWithProduct[]> {
   const { prisma } = await import('../prismaClient');
 
-  return prisma.basketItem.findMany({
-    where: { customerID },
+  return prisma.basket.findMany({
+    where: { userID },
     include: { product: true },
     orderBy: { createdAt: 'asc' },
   });
@@ -21,29 +21,26 @@ export function createLockedBasketQueries(db: Prisma.TransactionClient) {
     findProductForBasket: async (productID: string) =>
       db.product.findUnique({ where: { productID } }),
 
-    findBasketItem: (
-      customerID: string,
-      productID: string,
-    ): Promise<BasketItemWithProduct | null> =>
-      db.basketItem.findUnique({
-        where: { customerID_productID: { customerID, productID } },
+    findBasketItem: (userID: string, productID: string): Promise<BasketItemWithProduct | null> =>
+      db.basket.findUnique({
+        where: { userID_productID: { userID, productID } },
         include: { product: true },
       }),
 
     saveBasketItemQuantity: (
-      customerID: string,
+      userID: string,
       productID: string,
       quantity: number,
     ): Promise<BasketItemWithProduct> =>
-      db.basketItem.upsert({
-        where: { customerID_productID: { customerID, productID } },
-        create: { customerID, productID, quantity },
+      db.basket.upsert({
+        where: { userID_productID: { userID, productID } },
+        create: { userID, productID, quantity },
         update: { quantity },
         include: { product: true },
       }),
 
-    deleteBasketItem: async (customerID: string, productID: string) =>
-      db.basketItem.deleteMany({ where: { customerID, productID } }),
+    deleteBasketItem: async (userID: string, productID: string) =>
+      db.basket.deleteMany({ where: { userID, productID } }),
   };
 }
 

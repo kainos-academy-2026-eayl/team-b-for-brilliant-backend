@@ -7,8 +7,12 @@ export interface CustomerCredentials {
 export async function findCustomerByEmail(email: string): Promise<CustomerCredentials | null> {
   const { prisma } = await import('../prismaClient');
 
-  return prisma.customer.findUnique({
+  const user = await prisma.user.findUnique({
     where: { email },
-    select: { customerID: true, passwordHash: true, mfaEnabled: true },
+    select: { userID: true, passwordHash: true, mfaEnabled: true },
   });
+
+  return user
+    ? { customerID: user.userID, passwordHash: user.passwordHash, mfaEnabled: user.mfaEnabled }
+    : null;
 }

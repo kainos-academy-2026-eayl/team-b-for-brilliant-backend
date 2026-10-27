@@ -1,15 +1,15 @@
 import { HttpError } from '../errors/httpError';
 import { lockCustomer } from './customerLock';
 
-export async function completeCheckout(customerID: string): Promise<{ orderID: string }> {
+export async function completeCheckout(userID: string): Promise<{ orderID: string; }> {
   const { prisma } = await import('../prismaClient');
 
   return prisma.$transaction(async (tx) => {
     // A second checkout for this customer waits here, then sees the already-cleared basket
-    await lockCustomer(tx, customerID);
+    await lockCustomer(tx, userID);
 
-    const basketItems = await tx.basketItem.findMany({
-      where: { customerID },
+    const basketItems = await tx.basket.findMany({
+      where: { userID },
       include: { product: true },
     });
 
@@ -18,7 +18,7 @@ export async function completeCheckout(customerID: string): Promise<{ orderID: s
     }
 
     const order = await tx.order.create({
-      data: { customerID },
+      data: { userID },
       select: { orderID: true },
     });
 
@@ -66,9 +66,9 @@ export async function completeCheckout(customerID: string): Promise<{ orderID: s
       select: { productID: true },
     });
 
-    await tx.basketItem.deleteMany({
+    await tx.basket.deleteMany({
       where: {
-        OR: [{ customerID }, { productID: { in: soldOut.map((product) => product.productID) } }],
+        OR: [{ userID }, { productID: { in: soldOut.map((product) => product.productID) } }],
       },
     });
 

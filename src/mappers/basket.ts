@@ -7,7 +7,7 @@ export function toBasketItemDto(item: BasketItemWithProduct): BasketItemDto {
   const stock = item.product.quantity;
 
   return {
-    basketItemID: item.basketItemID,
+    basketItemID: item.basketID,
     productID: item.productID,
     productName: item.product.name,
     quantityInBasket: item.quantity,
