@@ -6,11 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": [
-      "**",
-      "!!src/generated",
-      "!!package-lock.json"
-    ]
+    "includes": ["**", "!!src/generated", "!!package-lock.json"]
   },
   "formatter": {
     "enabled": true,
@@ -34,49 +30,35 @@
                   "scope": "global"
                 },
                 "match": "(id|db|i|j|k|.{3,})",
-                "formats": [
-                  "camelCase",
-                  "PascalCase",
-                  "CONSTANT_CASE"
-                ]
+                "formats": ["camelCase", "PascalCase", "CONSTANT_CASE"]
               },
               {
                 "selector": {
                   "kind": "variable"
                 },
                 "match": "(id|db|i|j|k|.{3,})",
-                "formats": [
-                  "camelCase",
-                  "PascalCase"
-                ]
+                "formats": ["camelCase", "PascalCase"]
               },
               {
                 "selector": {
                   "kind": "functionParameter"
                 },
                 "match": "(id|db|i|j|k|.{3,})",
-                "formats": [
-                  "camelCase",
-                  "PascalCase"
-                ]
+                "formats": ["camelCase", "PascalCase"]
               },
               {
                 "selector": {
                   "kind": "catchParameter"
                 },
                 "match": "(id|db|i|j|k|.{3,})",
-                "formats": [
-                  "camelCase"
-                ]
+                "formats": ["camelCase"]
               },
               {
                 "selector": {
                   "kind": "indexParameter"
                 },
                 "match": "(id|db|i|j|k|.{3,})",
-                "formats": [
-                  "camelCase"
-                ]
+                "formats": ["camelCase"]
               },
               {
                 "match": ".*"

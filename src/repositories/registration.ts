@@ -40,15 +40,17 @@ export async function saveVerificationToken(
 // Returns true only if the token was valid, unused and not expired
 export async function consumeVerificationToken(tokenHash: string): Promise<boolean> {
   const { prisma } = await import('../prismaClient');
-  return prisma.$transaction(async (tx) => {
-    const claimed = await tx.emailVerificationToken.updateMany({
+  return prisma.$transaction(async (transaction) => {
+    const claimed = await transaction.emailVerificationToken.updateMany({
       where: { tokenHash, usedAt: null, expiresAt: { gt: new Date() } },
       data: { usedAt: new Date() },
     });
     if (claimed.count === 0) return false;
 
-    const token = await tx.emailVerificationToken.findUniqueOrThrow({ where: { tokenHash } });
-    await tx.customer.update({
+    const token = await transaction.emailVerificationToken.findUniqueOrThrow({
+      where: { tokenHash },
+    });
+    await transaction.customer.update({
       where: { customerID: token.customerID },
       data: { emailVerified: true },
     });
