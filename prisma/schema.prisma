@@ -158,6 +158,38 @@ model Discounts {
   orders Order[]
 }
 
+model Order {
+  orderID    String      @id @default(uuid())
+  userID String
+  createdAt  DateTime    @default(now())
+  discountID String?
+  user   User    @relation(fields: [userID], references: [userID], onDelete: Restrict, onUpdate: Cascade)
+  discount   Discounts?  @relation(fields: [discountID], references: [discountID], onDelete: SetNull, onUpdate: Cascade)
+  orderItems OrderItem[]
+}
+
+model OrderItem {
+  orderItemID String  @id @default(uuid())
+  orderID     String
+  productID   String
+  quantity    Int
+  unitPrice   Decimal @db.Decimal(10, 2)
+
+  order   Order   @relation(fields: [orderID], references: [orderID], onDelete: Cascade, onUpdate: Cascade)
+  product Product @relation(fields: [productID], references: [productID], onDelete: Restrict, onUpdate: Cascade)
+}
+
+model Discounts {
+  discountID String       @id @default(uuid())
+  code       String       @unique
+  type       DiscountType
+  value      Decimal      @db.Decimal(10, 2)
+  createdAt  DateTime     @default(now())
+  expiryDate DateTime
+
+  orders Order[]
+}
+
 enum DiscountType {
   PERCENTAGE
   AMOUNT_OFF
