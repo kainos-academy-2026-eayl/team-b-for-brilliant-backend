@@ -21,6 +21,7 @@ function createFakeRepo(stock: number, quantityInBasket?: number): BasketReposit
     visible: true,
     weight: 1,
     deletedAt: null,
+    salesNo: 0,
   };
 
   const toItem = (quantity: number): BasketItemWithProduct => ({
@@ -81,6 +82,7 @@ test('adding to an existing basket item adds to its quantity', async () => {
 
 test('setting quantity to exactly the stock level is allowed', async () => {
   const item = await setBasketItemQuantity('customer-1', 'product-1', 5, createFakeRepo(5, 2));
+  assert.ok(item, 'Expected an updated basket item');
   assert.equal(item.quantityInBasket, 5);
 });
 

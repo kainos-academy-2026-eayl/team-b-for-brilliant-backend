@@ -73,10 +73,10 @@ test('ended and expired sessions stop working', () => {
 });
 
 test('session tokens are unique and unguessable in length', () => {
-  const a = createSession('customer-5');
-  const b = createSession('customer-5');
-  assert.notEqual(a, b);
-  assert.ok(a.length >= 43);
+  const TokenA = createSession('customer-5');
+  const TokenB = createSession('customer-5');
+  assert.notEqual(TokenA, TokenB);
+  assert.ok(TokenA.length >= 43);
 });
 
 test('basket and checkout routes reject unauthenticated requests', async () => {

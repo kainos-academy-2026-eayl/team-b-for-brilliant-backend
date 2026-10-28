@@ -5,7 +5,7 @@
     "types": ["node"],
     "module": "Preserve",
     "moduleResolution": "Bundler",
-    "rootDir": "src",
+    "rootDir": ".",
     "outDir": "./dist",
     "noEmit": true,
     "strict": true,
@@ -23,6 +23,6 @@
     "incremental": true,
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo"
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "tests/**/*"],
   "exclude": ["node_modules", "dist"]
 }
