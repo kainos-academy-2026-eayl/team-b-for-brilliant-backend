@@ -4,7 +4,7 @@ import express from 'express';
 import request from 'supertest';
 import { createAuthRouter } from '../src/controllers/auth';
 import { verifyCredentials } from '../src/services/auth';
-import { hashPassword } from '../src/utils/password';
+import { hashPassword } from '../src/services/password';
 
 function authApp(verify: typeof verifyCredentials) {
   const app = express();

@@ -6,9 +6,9 @@ export async function completeCheckout(userID: string): Promise<{ orderID: strin
 
   return prisma.$transaction(async (transaction) => {
     // A second checkout for this customer waits here, then sees the already-cleared basket
-    await lockCustomer(tx, userID);
+    await lockCustomer(transaction, userID);
 
-    const basketItems = await tx.basket.findMany({
+    const basketItems = await transaction.basket.findMany({
       where: { userID },
       include: { product: true },
     });
@@ -17,7 +17,7 @@ export async function completeCheckout(userID: string): Promise<{ orderID: strin
       throw new HttpError(400, 'Your basket is empty');
     }
 
-    const order = await tx.order.create({
+    const order = await transaction.order.create({
       data: { userID },
       select: { orderID: true },
     });
@@ -66,7 +66,7 @@ export async function completeCheckout(userID: string): Promise<{ orderID: strin
       select: { productID: true },
     });
 
-    await tx.basket.deleteMany({
+    await transaction.basket.deleteMany({
       where: {
         OR: [{ userID }, { productID: { in: soldOut.map((product) => product.productID) } }],
       },
