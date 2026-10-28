@@ -80,8 +80,10 @@ model Order {
   orderID   String   @id @default(uuid())
   userID    String
   createdAt DateTime @default(now())
+  discountID String?
 
   user       User        @relation(fields: [userID], references: [userID], onDelete: Restrict, onUpdate: Cascade)
+  discount Discounts? @relation(fields: [discountID], references: [discountID], onDelete: Restrict, onUpdate: Cascade)
   orderItems OrderItem[]
 }
 
