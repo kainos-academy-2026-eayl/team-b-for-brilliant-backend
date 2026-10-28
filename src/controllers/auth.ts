@@ -27,6 +27,7 @@ export function createAuthRouter(
     }
 
     const result = await services.verifyCredentials(body.data.email, body.data.password);
+
     switch (result.status) {
       case 'not_found':
         res.status(404).json({ error: 'Customer not found' });
@@ -35,7 +36,7 @@ export function createAuthRouter(
         res.status(401).json({ error: 'Invalid credentials' });
         return;
       case 'valid':
-        res.json({ customerId: result.customerId, mfaEnabled: result.mfaEnabled });
+        res.json({ customerId: result.customerId });
     }
   });
 

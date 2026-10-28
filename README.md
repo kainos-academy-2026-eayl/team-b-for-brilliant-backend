@@ -32,6 +32,15 @@ and then the npm script generates a client matching your models (Prisma 7
 does not generate it automatically during migrations). Commit the schema and migrations
 with the feature. Do not reset an existing database just to set up Prisma.
 
+The categories migration has been restored to its original applied contents,
+including creation of the original account tables. Do not remove statements from
+already-applied migrations: it breaks both checksum validation and fresh setup.
+The `20261027142300_unify_users_and_baskets` migration preserves account IDs,
+password hashes, admin roles, baskets and order links while matching the current
+schema. It rejects conflicting customer/admin IDs or email addresses instead of
+merging accounts silently. Removed verification/MFA fields and admin usernames
+are not retained in the new schema.
+
 Import the shared client from `src/prismaClient.ts` in your repositories:
 
 ```ts
@@ -153,6 +162,26 @@ are optional booleans. Omitted flags are left for Prisma's database defaults.
 Unknown properties, including IDs, deletion timestamps and images, are stripped
 from validated data. Always use the validated `data`, not the original input.
 This is input validation only: it does not save products or add a POST endpoint.
+
+### Registration
+
+`POST /api/v1/auth/register` accepts an email address and a password of 8 to
+1024 characters. Email addresses are trimmed and lowercased before storage.
+Passwords are hashed before the account is created. Registration does not send
+email or require an email-verification token.
+
+New and already-registered addresses both receive HTTP 202 with
+`{ "message": "Registration request processed" }` to avoid revealing whether an
+account exists. Invalid input returns HTTP 400; registration failures return
+HTTP 500. The former verification and resend-verification endpoints are removed.
+
+### Credential verification
+
+`POST /auth/verify` accepts an email address and password. Valid credentials return
+HTTP 200 with `{ "customerId": "<userID>" }`; no MFA flag is queried or returned.
+The `customerId` response key is retained for compatibility with the frontend,
+while the account is stored in the `User` table. Incorrect passwords return
+HTTP 401, unknown accounts return HTTP 404, and invalid input returns HTTP 400.
 
 ## Backend CI
 
