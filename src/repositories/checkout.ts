@@ -4,7 +4,7 @@ import { lockCustomer } from './customerLock';
 export async function completeCheckout(userID: string): Promise<{ orderID: string }> {
   const { prisma } = await import('../prismaClient');
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (transaction) => {
     // A second checkout for this customer waits here, then sees the already-cleared basket
     await lockCustomer(tx, userID);
 
@@ -29,7 +29,7 @@ export async function completeCheckout(userID: string): Promise<{ orderID: strin
         throw new HttpError(409, `${product.name} is no longer available`);
       }
 
-      const latestPrice = await tx.productPrices.findFirst({
+      const latestPrice = await transaction.productPrices.findFirst({
         where: { productID: item.productID },
         orderBy: [{ createdAt: 'desc' }, { priceID: 'desc' }],
       });
@@ -39,7 +39,7 @@ export async function completeCheckout(userID: string): Promise<{ orderID: strin
       }
 
       // Only takes stock if enough is left; count 0 means someone else bought it first
-      const stockUpdate = await tx.product.updateMany({
+      const stockUpdate = await transaction.product.updateMany({
         where: { productID: item.productID, quantity: { gte: item.quantity } },
         data: { quantity: { decrement: item.quantity } },
       });
@@ -48,7 +48,7 @@ export async function completeCheckout(userID: string): Promise<{ orderID: strin
         throw new HttpError(409, `Not enough ${product.name} in stock`);
       }
 
-      await tx.orderItem.create({
+      await transaction.orderItem.create({
         data: {
           orderID: order.orderID,
           productID: item.productID,
@@ -58,7 +58,7 @@ export async function completeCheckout(userID: string): Promise<{ orderID: strin
       });
     }
 
-    const soldOut = await tx.product.findMany({
+    const soldOut = await transaction.product.findMany({
       where: {
         productID: { in: basketItems.map((item) => item.productID) },
         quantity: 0,

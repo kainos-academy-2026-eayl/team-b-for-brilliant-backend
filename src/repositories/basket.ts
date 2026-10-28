@@ -54,8 +54,8 @@ export async function withCustomerLock<T>(
 ): Promise<T> {
   const { prisma } = await import('../prismaClient');
 
-  return prisma.$transaction(async (tx) => {
-    await lockCustomer(tx, customerID);
-    return work(createLockedBasketQueries(tx));
+  return prisma.$transaction(async (transaction) => {
+    await lockCustomer(transaction, customerID);
+    return work(createLockedBasketQueries(transaction));
   });
 }

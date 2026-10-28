@@ -144,3 +144,19 @@ model Role {
 
   users User[]
 }
+
+model Discounts {
+  discountID String       @id @default(uuid())
+  code       String       @unique
+  type       DiscountType
+  value      Decimal      @db.Decimal(10, 2)
+  createdAt  DateTime     @default(now())
+  expiryDate DateTime
+
+  orders Order[]
+}
+
+enum DiscountType {
+  PERCENTAGE
+  AMOUNT_OFF
+}
