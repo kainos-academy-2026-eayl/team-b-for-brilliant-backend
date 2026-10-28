@@ -1,5 +1,5 @@
 import { createCustomer } from '../repositories/registration';
-import { hashPassword } from '../utils/password';
+import { hashPassword } from '../services/password';
 
 export async function registerCustomer(
   email: string,

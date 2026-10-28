@@ -10,6 +10,7 @@ import { registrationRouter } from './controllers/registration';
 import type { ProductDto } from './dtos/product';
 import { authenticateCustomer } from './middleware/authenticateCustomer';
 import { getProduct, getProducts } from './services/products';
+import { hashPassword } from './services/password';
 
 export function createApp(
   fetchProducts: () => Promise<ProductDto[]> = getProducts,

@@ -1,5 +1,5 @@
 import { findCustomerByEmail } from '../models/customers';
-import { verifyPassword } from '../utils/password';
+import { comparePasswords } from './password'
 
 export type VerifyCredentialsResult =
   | { status: 'valid'; customerId: string }
@@ -14,7 +14,7 @@ export async function verifyCredentials(
   const customer = await findCustomer(email.trim());
   if (customer === null) return { status: 'not_found' };
 
-  if (!(await verifyPassword(password, customer.passwordHash))) return { status: 'invalid' };
+  if (!(await comparePasswords(password, customer.passwordHash))) return { status: 'invalid' };
 
   return { status: 'valid', customerId: customer.customerID };
 }
