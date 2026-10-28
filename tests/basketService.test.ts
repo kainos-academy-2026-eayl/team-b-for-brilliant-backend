@@ -22,7 +22,6 @@ function createFakeRepo(stock: number, quantityInBasket?: number): BasketReposit
     weight: 1,
     salesNo: 0,
     deletedAt: null,
-    salesNo: 0,
   };
 
   const toItem = (quantity: number): BasketItemWithProduct => ({

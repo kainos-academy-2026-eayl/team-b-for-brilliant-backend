@@ -77,13 +77,13 @@ model Basket {
 }
 
 model Order {
-  orderID   String   @id @default(uuid())
-  userID    String
-  createdAt DateTime @default(now())
-  discountID String?
+  orderID    String   @id @default(uuid())
+  userID String
+  createdAt  DateTime @default(now())
 
-  user       User        @relation(fields: [userID], references: [userID], onDelete: Restrict, onUpdate: Cascade)
-  discount Discounts? @relation(fields: [discountID], references: [discountID], onDelete: Restrict, onUpdate: Cascade)
+  discountID String?
+  user   User    @relation(fields: [userID], references: [userID], onDelete: Restrict, onUpdate: Cascade)
+  discount   Discounts?  @relation(fields: [discountID], references: [discountID], onDelete: SetNull, onUpdate: Cascade)
   orderItems OrderItem[]
 }
 

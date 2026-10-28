@@ -3,8 +3,8 @@ import { test } from 'node:test';
 import express from 'express';
 import request from 'supertest';
 import { createRegistrationRouter } from '../src/controllers/registration';
+import { comparePasswords } from '../src/services/password';
 import { registerCustomer } from '../src/services/registration';
-import { verifyPassword } from '../src/utils/password';
 
 function registrationApp(register: typeof registerCustomer) {
   const app = express();
@@ -19,7 +19,7 @@ test('registration saves a hashed password without email verification', async ()
     calls++;
     assert.equal(email, 'new@example.com');
     assert.notEqual(passwordHash, 'password123');
-    assert.equal(await verifyPassword('password123', passwordHash), true);
+    assert.equal(await comparePasswords(passwordHash, 'password123'), true);
     return { customerID: 'user-1' };
   });
   assert.equal(calls, 1);
@@ -74,8 +74,8 @@ test('removed verification endpoints return 404', async () => {
     .expect(404);
 });
 
-test('registration failures return an error rather than success', async (t) => {
-  const log = t.mock.method(console, 'error', () => {});
+test('registration failures return an error rather than success', async (testContext) => {
+  const log = testContext.mock.method(console, 'error', () => {});
   const app = registrationApp(async () => {
     throw new Error('Storage unavailable');
   });
