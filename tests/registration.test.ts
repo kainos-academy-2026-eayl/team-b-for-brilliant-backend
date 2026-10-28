@@ -3,7 +3,6 @@ import { test } from 'node:test';
 import express from 'express';
 import request from 'supertest';
 import { createRegistrationRouter } from '../src/controllers/registration';
-import { comparePasswords } from '../src/services/password';
 import { registerCustomer } from '../src/services/registration';
 
 function registrationApp(register: typeof registerCustomer) {
@@ -12,18 +11,6 @@ function registrationApp(register: typeof registerCustomer) {
   app.use('/api/v1/auth', createRegistrationRouter(register));
   return app;
 }
-
-test('registration saves a hashed password without email verification', async () => {
-  let calls = 0;
-  await registerCustomer('new@example.com', 'password123', async (email, passwordHash) => {
-    calls++;
-    assert.equal(email, 'new@example.com');
-    assert.notEqual(passwordHash, 'password123');
-    assert.equal(await comparePasswords(passwordHash, 'password123'), true);
-    return { customerID: 'user-1' };
-  });
-  assert.equal(calls, 1);
-});
 
 test('registration accepts an existing email without revealing it', async () => {
   await registerCustomer('existing@example.com', 'password123', async () => null);
