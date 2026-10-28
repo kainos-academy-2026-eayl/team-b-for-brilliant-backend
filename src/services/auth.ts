@@ -1,5 +1,5 @@
 import { findCustomerByEmail } from '../models/customers';
-import { comparePasswords } from './password'
+import { comparePasswords } from './password';
 
 export type VerifyCredentialsResult =
   | { status: 'valid'; customerId: string }

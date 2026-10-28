@@ -1,7 +1,6 @@
 import { json, type Request, type Response, Router } from 'express';
 import { z } from 'zod';
 import { type VerifyCredentialsResult, verifyCredentials } from '../services/auth';
-import {hashPassword} from '../services/password';
 
 const verifyBodySchema = z.object({
   email: z.string().min(1),

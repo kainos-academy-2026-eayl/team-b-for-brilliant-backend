@@ -34,8 +34,23 @@ export async function findCustomerDetails(userID: string): Promise<userDetails |
 
   const user = await prisma.user.findUnique({
     where: { userID },
-    include: { user: true, role: true, securityQuestion: true }
+    include: { user: true, role: true, securityQuestion: true },
   });
 
-  return user ? {userID: user.userID, email: user.email, firstname: user.firstname, surname: user.surname, addressLine1: user.addressLine1, addressLine2: user.addressLine2, postcode: user.postcode, passwordHash: user.passwordHash,role: user.role?.name, accessLevel: user.role?.accessLevel, securityQuestion: user.securityQuestion?.question, securityAnswer: user.securityAnswer} : null;
+  return user
+    ? {
+        userID: user.userID,
+        email: user.email,
+        firstname: user.firstname,
+        surname: user.surname,
+        addressLine1: user.addressLine1,
+        addressLine2: user.addressLine2,
+        postcode: user.postcode,
+        passwordHash: user.passwordHash,
+        role: user.role?.name,
+        accessLevel: user.role?.accessLevel,
+        securityQuestion: user.securityQuestion?.question,
+        securityAnswer: user.securityAnswer,
+      }
+    : null;
 }
