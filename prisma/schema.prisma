@@ -72,17 +72,17 @@ model ProductCategories {
 }
 
 model Customer {
-  customerID   String  @id @default(uuid())
-  email        String  @unique
-  firstname    String?
-  surname      String?
-  addressLine1 String?
-  addressLine2 String?
-  postcode     String?
-  emailVerified Boolean @default(false)
+  customerID         String                   @id @default(uuid())
+  email              String                   @unique
+  firstname          String?
+  surname            String?
+  addressLine1       String?
+  addressLine2       String?
+  postcode           String?
+  emailVerified      Boolean                  @default(false)
   verificationTokens EmailVerificationToken[]
-  passwordHash String
-  mfaEnabled   Boolean @default(false)
+  passwordHash       String
+  mfaEnabled         Boolean                  @default(false)
 
   basketItems BasketItem[]
   orders      Order[]
@@ -133,11 +133,12 @@ model BasketItem {
 }
 
 model Order {
-  orderID    String   @id @default(uuid())
+  orderID    String      @id @default(uuid())
   customerID String
-  createdAt  DateTime @default(now())
-
+  createdAt  DateTime    @default(now())
+  discountID String?
   customer   Customer    @relation(fields: [customerID], references: [customerID], onDelete: Restrict, onUpdate: Cascade)
+  discount   Discounts?  @relation(fields: [discountID], references: [discountID], onDelete: SetNull, onUpdate: Cascade)
   orderItems OrderItem[]
 }
 
@@ -161,4 +162,20 @@ model EmailVerificationToken {
   createdAt  DateTime  @default(now())
 
   customer Customer @relation(fields: [customerID], references: [customerID], onDelete: Cascade)
+}
+
+model Discounts {
+  discountID String       @id @default(uuid())
+  code       String       @unique
+  type       DiscountType
+  value      Decimal      @db.Decimal(10, 2)
+  createdAt  DateTime     @default(now())
+  expiryDate DateTime
+
+  orders Order[]
+}
+
+enum DiscountType {
+  PERCENTAGE
+  AMOUNT_OFF
 }
