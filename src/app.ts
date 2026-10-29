@@ -5,6 +5,7 @@ import { authServices, createAuthRouter } from './controllers/auth';
 import { basketRouter } from './controllers/basket';
 import { bookingsRouter } from './controllers/bookings';
 import { checkoutRouter } from './controllers/checkout';
+import { ordersRouter } from './controllers/orders';
 import { createProductsRouter, productPriceServices } from './controllers/products';
 import { profileRouter } from './controllers/profile';
 import { registrationRouter } from './controllers/registration';
@@ -36,5 +37,6 @@ export function createApp(
   app.use('/basket', authenticate, basketRouter);
   app.use('/checkout', authenticate, checkoutRouter);
   app.use('/profile', authenticate, profileRouter);
+  app.use('/orders', authenticate, ordersRouter);
   return app;
 }
