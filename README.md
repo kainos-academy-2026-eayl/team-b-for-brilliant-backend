@@ -182,10 +182,27 @@ HTTP 200 with `{ "unique": true }` or `{ "unique": false }`. Clients must read
 the boolean response, not infer uniqueness from the HTTP status.
 
 `POST /auth/verify` accepts an email address and password. Valid credentials return
-HTTP 200 with `{ "customerId": "<userID>" }`; no MFA flag is queried or returned.
+HTTP 200 with `{ "customerId": "<userID>", "accessToken": "<token>" }`;
+no MFA flag is queried or returned. The access token uses the existing in-memory
+session store, expires after one hour, and is sent as `Authorization: Bearer
+<token>` for authenticated account requests. Tokens are local to the backend
+process and are invalidated by a restart.
 The `customerId` response key is retained for compatibility with the frontend,
 while the account is stored in the `User` table. Incorrect passwords return
 HTTP 401, unknown accounts return HTTP 404, and invalid input returns HTTP 400.
+
+### Optional account details
+
+`PUT /account/details` requires a valid bearer token and updates only its owner's
+existing `User` record. It accepts `firstname`, `surname`, `addressLine1`,
+`addressLine2` and `postcode`; all fields are optional. Values are trimmed, and
+empty or omitted fields are stored as null. Names are limited to 100 characters,
+address lines to 255, and postcodes to 20. This endpoint replaces these five
+profile fields and does not change email, credentials, roles or security settings.
+
+Success returns HTTP 204. Invalid input returns 400, unauthenticated requests
+return 401, and a missing customer returns 404. No Prisma schema change or
+database migration is required.
 
 ## Backend CI
 
