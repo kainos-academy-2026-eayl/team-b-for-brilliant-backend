@@ -1,12 +1,17 @@
 import { json, type Request, type Response, Router } from 'express';
 import { z } from 'zod';
-import { type UniqueEmailResult, type VerifyCredentialsResult, verifyCredentials, uniqueEmail } from '../services/auth';
+import {
+  type UniqueEmailResult,
+  uniqueEmail,
+  type VerifyCredentialsResult,
+  verifyCredentials,
+} from '../services/auth';
 
 const verifyBodySchema = z.object({
   email: z.string().min(1),
   password: z.string().min(1),
 });
-  
+
 const emailBodySchema = z.object({
   email: z.string().min(1),
 });
@@ -57,11 +62,10 @@ export function createAuthRouter(
 
     if (result.unique) {
       res.json({ unique: true });
-    }
-    else {
+    } else {
       res.json({ unique: false });
     }
-  })
+  });
 
   return router;
 }
