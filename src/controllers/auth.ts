@@ -1,16 +1,13 @@
 import { json, type Request, type Response, Router } from 'express';
 import { z } from 'zod';
 import { type UniqueEmailResult, type VerifyCredentialsResult, verifyCredentials, uniqueEmail } from '../services/auth';
+import { createSession } from '../services/sessions';
 
 const verifyBodySchema = z.object({
   email: z.string().min(1),
   password: z.string().min(1),
 });
   
-const emailBodySchema = z.object({
-  email: z.string().min(1),
-});
-
 const emailBodySchema = z.object({
   email: z.string().min(1),
 });
@@ -68,23 +65,6 @@ export function createAuthRouter(
       res.json({ unique: false });
     }
   });
-
-  router.post('/unique-email', async (req: Request, res: Response) => {
-    const body = emailBodySchema.safeParse(req.body);
-    if (!body.success) {
-      res.status(400).json({ error: 'email is required' });
-      return;
-    }
-
-    const result = await services.uniqueEmail(body.data.email);
-
-    if (result.unique) {
-      res.json({ unique: true });
-    }
-    else {
-      res.json({ unique: false });
-    }
-  })
 
   return router;
 }
