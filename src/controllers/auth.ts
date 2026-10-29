@@ -1,13 +1,18 @@
 import { json, type Request, type Response, Router } from 'express';
 import { z } from 'zod';
-import { type UniqueEmailResult, type VerifyCredentialsResult, verifyCredentials, uniqueEmail } from '../services/auth';
+import {
+  type UniqueEmailResult,
+  uniqueEmail,
+  type VerifyCredentialsResult,
+  verifyCredentials,
+} from '../services/auth';
 import { createSession } from '../services/sessions';
 
 const verifyBodySchema = z.object({
   email: z.string().min(1),
   password: z.string().min(1),
 });
-  
+
 const emailBodySchema = z.object({
   email: z.string().min(1),
 });
