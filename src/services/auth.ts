@@ -6,6 +6,8 @@ export type VerifyCredentialsResult =
   | { status: 'invalid' }
   | { status: 'not_found' };
 
+export type UniqueEmailResult = { unique: boolean };
+
 export async function verifyCredentials(
   email: string,
   password: string,
@@ -17,4 +19,12 @@ export async function verifyCredentials(
   if (!(await comparePasswords(password, customer.passwordHash))) return { status: 'invalid' };
 
   return { status: 'valid', customerId: customer.customerID };
+}
+
+export async function uniqueEmail(
+  email: string,
+  findCustomer: typeof findCustomerByEmail = findCustomerByEmail,
+): Promise<UniqueEmailResult> {
+  const customer = await findCustomer(email.trim());
+  return { unique: customer === null };
 }
