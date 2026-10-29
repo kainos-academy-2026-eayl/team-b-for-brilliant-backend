@@ -5,6 +5,7 @@ import request from 'supertest';
 import { createAuthRouter } from '../src/controllers/auth';
 import { verifyCredentials } from '../src/services/auth';
 import { hashPassword } from '../src/services/password';
+import { getCustomerIDForToken } from '../src/services/sessions';
 
 function authApp(verify: typeof verifyCredentials) {
   const app = express();
@@ -47,7 +48,7 @@ test('credential lookup failures propagate', async () => {
   );
 });
 
-test('the credentials endpoint returns only customerId on success', async () => {
+test('the credentials endpoint returns the customerId and a session token on success', async () => {
   const app = authApp(async (email, password) => {
     assert.equal(email, 'user@example.com');
     assert.equal(password, 'password123');
@@ -57,7 +58,8 @@ test('the credentials endpoint returns only customerId on success', async () => 
     .post('/auth/verify')
     .send({ email: 'user@example.com', password: 'password123' })
     .expect(200);
-  assert.deepEqual(response.body, { customerId: 'user-1' });
+  assert.equal(response.body.customerId, 'user-1');
+  assert.equal(getCustomerIDForToken(response.body.token), 'user-1');
 });
 
 test('the credentials endpoint preserves invalid and missing account responses', async () => {

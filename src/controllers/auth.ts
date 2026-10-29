@@ -1,6 +1,7 @@
 import { json, type Request, type Response, Router } from 'express';
 import { z } from 'zod';
 import { type VerifyCredentialsResult, verifyCredentials } from '../services/auth';
+import { createSession } from '../services/sessions';
 
 const verifyBodySchema = z.object({
   email: z.string().min(1),
@@ -36,7 +37,8 @@ export function createAuthRouter(
         res.status(401).json({ error: 'Invalid credentials' });
         return;
       case 'valid':
-        res.json({ customerId: result.customerId });
+        // TEMPORARY (KAN-98): issues an API token until login is reworked
+        res.json({ customerId: result.customerId, token: createSession(result.customerId) });
     }
   });
 
