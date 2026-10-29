@@ -9,15 +9,12 @@ import { endSession, getCustomerIDForToken } from '../src/services/sessions';
 
 function authApp(verify: typeof verifyCredentials) {
   const app = express();
-  app.use(
-    '/auth',
-    createAuthRouter({
-      verifyCredentials: verify,
-      uniqueEmail: async () => {
-        assert.fail('Email uniqueness must not be checked during credential verification');
-      },
-    }),
-  );
+  app.use('/auth', createAuthRouter({
+    verifyCredentials: verify,
+    uniqueEmail: async () => {
+      assert.fail('Email uniqueness must not be checked during credential verification');
+    },
+  }));
   return app;
 }
 
@@ -105,18 +102,15 @@ test('the credentials endpoint rejects invalid input before lookup', async () =>
 test('email uniqueness responds with a boolean for both new and existing accounts', async () => {
   for (const unique of [true, false]) {
     const app = express();
-    app.use(
-      '/auth',
-      createAuthRouter({
-        verifyCredentials: async () => {
-          assert.fail('Credentials must not be checked during email lookup');
-        },
-        uniqueEmail: async (email) => {
-          assert.equal(email, 'user@example.com');
-          return { unique };
-        },
-      }),
-    );
+    app.use('/auth', createAuthRouter({
+      verifyCredentials: async () => {
+        assert.fail('Credentials must not be checked during email lookup');
+      },
+      uniqueEmail: async (email) => {
+        assert.equal(email, 'user@example.com');
+        return { unique };
+      },
+    }));
     const response = await request(app)
       .post('/auth/unique-email')
       .send({ email: 'user@example.com' })
@@ -127,22 +121,22 @@ test('email uniqueness responds with a boolean for both new and existing account
 
 test('email uniqueness rejects missing input before lookup', async () => {
   const app = express();
-  app.use(
-    '/auth',
-    createAuthRouter({
-      verifyCredentials: async () => {
-        assert.fail('Credentials must not be checked during email lookup');
-      },
-      uniqueEmail: async () => {
-        assert.fail('Invalid input must not reach email lookup');
-      },
-    }),
-  );
+  app.use('/auth', createAuthRouter({
+    verifyCredentials: async () => {
+      assert.fail('Credentials must not be checked during email lookup');
+    },
+    uniqueEmail: async () => {
+      assert.fail('Invalid input must not reach email lookup');
+    },
+  }));
   await request(app).post('/auth/unique-email').send({}).expect(400);
 });
 
 test('email uniqueness service distinguishes existing and missing accounts', async () => {
-  assert.deepEqual(await uniqueEmail('user@example.com', async () => null), { unique: true });
+  assert.deepEqual(
+    await uniqueEmail('user@example.com', async () => null),
+    { unique: true },
+  );
   assert.deepEqual(
     await uniqueEmail('user@example.com', async () => ({
       customerID: 'user-1',
