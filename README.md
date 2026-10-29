@@ -93,6 +93,37 @@ Each image includes `imageID`, `productID`, `imageUrl`, and its integer
 stored order value so clients can sort images and select order 0 as the main image.
 An empty database returns `{ "products": [] }`.
 
+#### Search products
+
+`GET /products?search=mug` searches product names using case-insensitive partial
+matching (for example, matching "Travel Mug"). `q` is accepted as an alias for
+the frontend's existing search form: `GET /products?q=mug`.
+Supply only one of `search` or `q`. Search text is trimmed; empty, whitespace-only,
+repeated, and structured values return HTTP 400 with an `error` message.
+Omitting both parameters preserves the full catalogue response.
+
+`GET /products/search/:name` remains supported with the same matching and
+validation behavior. Both search endpoints return HTTP 200 with
+`{ "products": [] }` when nothing matches (the legacy search endpoint no longer
+returns HTTP 404 for an empty result). Database failures propagate as server errors.
+The response retains product images, categories, and departments.
+Search does not add category filtering; the backend currently ignores `category`.
+
+```sh
+curl 'http://localhost:3000/products?search=mug'
+```
+
+Route regression tests run with `npm test` without a database. To verify actual
+PostgreSQL partial and case-insensitive matching, point `DATABASE_URL` at a
+migrated, disposable test database and run:
+
+```sh
+RUN_DATABASE_TESTS=true node --import tsx --test tests/productSearchDatabase.test.ts
+```
+
+This opt-in test creates uniquely identified products and deletes those records
+afterward. It is skipped in ordinary test runs. Never run it against production.
+
 `GET /products/:productID` queries one product by ID, including its images,
 and returns `{ "product": {...} }`. An unknown ID returns `404` with
 `{ "error": "Product not found" }`. Database failures propagate as server errors.
