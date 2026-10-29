@@ -177,6 +177,10 @@ HTTP 500. The former verification and resend-verification endpoints are removed.
 
 ### Credential verification
 
+`POST /auth/unique-email` accepts `{ "email": "user@example.com" }` and returns
+HTTP 200 with `{ "unique": true }` or `{ "unique": false }`. Clients must read
+the boolean response, not infer uniqueness from the HTTP status.
+
 `POST /auth/verify` accepts an email address and password. Valid credentials return
 HTTP 200 with `{ "customerId": "<userID>" }`; no MFA flag is queried or returned.
 The `customerId` response key is retained for compatibility with the frontend,
