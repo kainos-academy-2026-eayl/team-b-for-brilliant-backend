@@ -208,15 +208,48 @@ HTTP 500. The former verification and resend-verification endpoints are removed.
 
 ### Credential verification
 
+Credential verification and email-uniqueness checks trim and lowercase email
+addresses, matching registration's normalization. Passwords are not normalized.
+
 `POST /auth/unique-email` accepts `{ "email": "user@example.com" }` and returns
 HTTP 200 with `{ "unique": true }` or `{ "unique": false }`. Clients must read
 the boolean response, not infer uniqueness from the HTTP status.
 
 `POST /auth/verify` accepts an email address and password. Valid credentials return
-HTTP 200 with `{ "customerId": "<userID>" }`; no MFA flag is queried or returned.
+HTTP 200 with `{ "customerId": "<userID>", "accessToken": "<token>" }`;
+no MFA flag is queried or returned. The access token uses the existing in-memory
+session store, expires after one hour, and is sent as `Authorization: Bearer
+<token>` for authenticated account requests. Tokens are local to the backend
+process and are invalidated by a restart.
 The `customerId` response key is retained for compatibility with the frontend,
 while the account is stored in the `User` table. Incorrect passwords return
 HTTP 401, unknown accounts return HTTP 404, and invalid input returns HTTP 400.
+
+### Optional account details
+
+`GET /account/security-questions` requires a bearer token and returns
+`{ "questions": [{ "questionID": "...", "question": "..." }] }`, ordered by question
+text and ID. Choices come from the existing `SecurityQuestion` table.
+
+`PUT /account/details` requires a valid bearer token and updates only its owner's
+existing `User` record. It accepts `firstname`, `surname`, `addressLine1`,
+`addressLine2` and `postcode`; all fields are optional. Values are trimmed, and
+empty or omitted fields are stored as null. Names are limited to 100 characters,
+address lines to 255, and postcodes to 20. This endpoint replaces these five
+profile fields and does not change email, passwords or roles.
+
+Updates may also include `securityQuestionID` and `securityAnswer`. If the
+trimmed answer is blank or absent, neither security field is updated. Otherwise
+the selected ID must refer to an existing question, and the trimmed,
+case-sensitive answer (at most 1024 characters) is stored as an Argon2 hash in
+`User.securityAnswer`. The question's text is retained through the existing
+`securityQuestionID` relation, not copied into the user record. Invalid questions
+return 400 before any profile fields are saved. Answers and answer hashes are
+never returned by the choices endpoint.
+
+Success returns HTTP 204. Invalid input returns 400, unauthenticated requests
+return 401, and a missing customer returns 404. No Prisma schema change or
+database migration is required.
 
 ## Backend CI
 

@@ -5,15 +5,19 @@ import request from 'supertest';
 import { createAuthRouter } from '../src/controllers/auth';
 import { uniqueEmail, verifyCredentials } from '../src/services/auth';
 import { hashPassword } from '../src/services/password';
+import { endSession, getCustomerIDForToken } from '../src/services/sessions';
 
 function authApp(verify: typeof verifyCredentials) {
   const app = express();
-  app.use('/auth', createAuthRouter({
-    verifyCredentials: verify,
-    uniqueEmail: async () => {
-      assert.fail('Email uniqueness must not be checked during credential verification');
-    },
-  }));
+  app.use(
+    '/auth',
+    createAuthRouter({
+      verifyCredentials: verify,
+      uniqueEmail: async () => {
+        assert.fail('Email uniqueness must not be checked during credential verification');
+      },
+    }),
+  );
   return app;
 }
 
@@ -52,7 +56,7 @@ test('credential lookup failures propagate', async () => {
   );
 });
 
-test('the credentials endpoint returns only customerId on success', async () => {
+test('the credentials endpoint returns customerId and an authenticated access token on success', async () => {
   const app = authApp(async (email, password) => {
     assert.equal(email, 'user@example.com');
     assert.equal(password, 'password123');
@@ -62,7 +66,11 @@ test('the credentials endpoint returns only customerId on success', async () => 
     .post('/auth/verify')
     .send({ email: 'user@example.com', password: 'password123' })
     .expect(200);
-  assert.deepEqual(response.body, { customerId: 'user-1' });
+  assert.equal(response.body.customerId, 'user-1');
+  assert.equal(typeof response.body.accessToken, 'string');
+  assert.equal(getCustomerIDForToken(response.body.accessToken), 'user-1');
+  assert.equal(response.body.mfaEnabled, undefined);
+  endSession(response.body.accessToken);
 });
 
 test('the credentials endpoint preserves invalid and missing account responses', async () => {
@@ -97,15 +105,18 @@ test('the credentials endpoint rejects invalid input before lookup', async () =>
 test('email uniqueness responds with a boolean for both new and existing accounts', async () => {
   for (const unique of [true, false]) {
     const app = express();
-    app.use('/auth', createAuthRouter({
-      verifyCredentials: async () => {
-        assert.fail('Credentials must not be checked during email lookup');
-      },
-      uniqueEmail: async (email) => {
-        assert.equal(email, 'user@example.com');
-        return { unique };
-      },
-    }));
+    app.use(
+      '/auth',
+      createAuthRouter({
+        verifyCredentials: async () => {
+          assert.fail('Credentials must not be checked during email lookup');
+        },
+        uniqueEmail: async (email) => {
+          assert.equal(email, 'user@example.com');
+          return { unique };
+        },
+      }),
+    );
     const response = await request(app)
       .post('/auth/unique-email')
       .send({ email: 'user@example.com' })
@@ -116,22 +127,22 @@ test('email uniqueness responds with a boolean for both new and existing account
 
 test('email uniqueness rejects missing input before lookup', async () => {
   const app = express();
-  app.use('/auth', createAuthRouter({
-    verifyCredentials: async () => {
-      assert.fail('Credentials must not be checked during email lookup');
-    },
-    uniqueEmail: async () => {
-      assert.fail('Invalid input must not reach email lookup');
-    },
-  }));
+  app.use(
+    '/auth',
+    createAuthRouter({
+      verifyCredentials: async () => {
+        assert.fail('Credentials must not be checked during email lookup');
+      },
+      uniqueEmail: async () => {
+        assert.fail('Invalid input must not reach email lookup');
+      },
+    }),
+  );
   await request(app).post('/auth/unique-email').send({}).expect(400);
 });
 
 test('email uniqueness service distinguishes existing and missing accounts', async () => {
-  assert.deepEqual(
-    await uniqueEmail('user@example.com', async () => null),
-    { unique: true },
-  );
+  assert.deepEqual(await uniqueEmail('user@example.com', async () => null), { unique: true });
   assert.deepEqual(
     await uniqueEmail('user@example.com', async () => ({
       customerID: 'user-1',
