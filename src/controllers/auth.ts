@@ -49,7 +49,10 @@ export function createAuthRouter(
         res.status(401).json({ error: 'Invalid credentials' });
         return;
       case 'valid':
-        res.json({ customerId: result.customerId, token: issueToken(result.customerId) });
+        res.json({
+          customerId: result.customerId,
+          accessToken: createSession(result.customerId),
+        });
     }
   });
 

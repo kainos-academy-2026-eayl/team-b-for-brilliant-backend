@@ -1,6 +1,7 @@
 import { resolve } from 'node:path';
 import cors from 'cors';
 import express, { type Express, type Request, type RequestHandler, type Response } from 'express';
+import { createAccountDetailsRouter } from './controllers/accountDetails';
 import { authServices, createAuthRouter } from './controllers/auth';
 import { basketRouter } from './controllers/basket';
 import { bookingsRouter } from './controllers/bookings';
@@ -47,6 +48,7 @@ export function createApp(
   });
 
   app.use('/auth', createAuthRouter(auth));
+  app.use('/account', authenticate, createAccountDetailsRouter());
   app.use('/bookings', bookingsRouter);
   app.use('/products', createProductsRouter(fetchProducts, prices, fetchProduct));
   app.use('/basket', authenticate, basketRouter);
