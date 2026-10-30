@@ -5,7 +5,7 @@ import { createApp } from '../src/app';
 import type { ProductDto } from '../src/dtos/product';
 
 test('GET /products returns products with their images', async () => {
-  const products = [
+  const products: ProductDto[] = [
     {
       productID: 'product-1',
       name: 'Example product',
@@ -14,6 +14,7 @@ test('GET /products returns products with their images', async () => {
       draft: false,
       visible: true,
       weight: 1.5,
+      salesNo: 3,
       deletedAt: null,
       productImages: [
         {
@@ -23,6 +24,15 @@ test('GET /products returns products with their images', async () => {
           imageOrder: 0,
         },
       ],
+      categories: [
+        {
+          categoryID: 'category-1',
+          name: 'Tools',
+          description: null,
+          departmentID: 'department-1',
+        },
+      ],
+      departments: [{ departmentID: 'department-1', name: 'Garden', description: null }],
     },
     {
       productID: 'product-2',
@@ -32,8 +42,11 @@ test('GET /products returns products with their images', async () => {
       draft: true,
       visible: false,
       weight: 2,
+      salesNo: 0,
       deletedAt: null,
       productImages: [],
+      categories: [],
+      departments: [],
     },
   ];
 
@@ -70,6 +83,7 @@ test('GET /products/:productID returns the selected product with images', async 
     draft: false,
     visible: true,
     weight: 1.5,
+    salesNo: 3,
     deletedAt: null,
     productImages: [
       {
@@ -79,9 +93,12 @@ test('GET /products/:productID returns the selected product with images', async 
         imageOrder: 0,
       },
     ],
+    categories: [],
+    departments: [],
   };
   const app = createApp(
     async () => [],
+    undefined,
     undefined,
     async (id) => {
       assert.equal(id, 'product-1');
@@ -96,6 +113,7 @@ test('GET /products/:productID returns 404 for an unknown product', async () => 
   const app = createApp(
     async () => [],
     undefined,
+    undefined,
     async () => null,
   );
   const response = await request(app).get('/products/missing').expect(404);
@@ -105,6 +123,7 @@ test('GET /products/:productID returns 404 for an unknown product', async () => 
 test('GET /products/:productID propagates database failures', async () => {
   const app = createApp(
     async () => [],
+    undefined,
     undefined,
     async () => {
       throw new Error('Database unavailable');

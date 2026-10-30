@@ -36,7 +36,7 @@ test('GET /images/product-1.svg serves the product image', async () => {
   assert.ok(Buffer.isBuffer(response.body));
   const svg = response.body.toString('utf8');
   assert.match(svg, /<svg /);
-  assert.match(svg, /<title id="title">Example product<\/title>/);
+  assert.match(svg, /<title id="title">Hyaluronic Acid Serum in a glass dropper bottle<\/title>/);
 });
 
 test('missing images and image directory listings return not found', async () => {
