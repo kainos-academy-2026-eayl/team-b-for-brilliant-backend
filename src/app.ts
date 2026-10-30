@@ -6,8 +6,10 @@ import { authServices, createAuthRouter } from './controllers/auth';
 import { basketRouter } from './controllers/basket';
 import { bookingsRouter } from './controllers/bookings';
 import { checkoutRouter } from './controllers/checkout';
+import { ordersRouter } from './controllers/orders';
 import { createDiscountsRouter, discountServices } from './controllers/discounts';
 import { createProductsRouter, productPriceServices } from './controllers/products';
+import { profileRouter } from './controllers/profile';
 import { registrationRouter } from './controllers/registration';
 import type { ProductDto } from './dtos/product';
 import { authenticateCustomer } from './middleware/authenticateCustomer';
@@ -53,6 +55,8 @@ export function createApp(
   app.use('/products', createProductsRouter(fetchProducts, prices, fetchProduct));
   app.use('/basket', authenticate, basketRouter);
   app.use('/checkout', authenticate, checkoutRouter);
+  app.use('/profile', authenticate, profileRouter);
+  app.use('/orders', authenticate, ordersRouter);
   app.use('/discounts', authenticate, createDiscountsRouter(discounts, adminOrOpenDiscountReads));
   return app;
 }
