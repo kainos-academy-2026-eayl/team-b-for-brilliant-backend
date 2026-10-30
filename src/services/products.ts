@@ -1,6 +1,19 @@
 import type { ProductDto } from '../dtos/product';
 import { toProductDto } from '../mappers/product';
-import { findProduct, findProducts, findProductsByName } from '../repositories/products';
+import {
+  findProduct,
+  findProducts,
+  findProductsByName,
+  type ProductFilters,
+} from '../repositories/products';
+
+export async function getFilteredProducts(
+  filters: ProductFilters,
+  fetchProducts: typeof findProducts = findProducts,
+): Promise<ProductDto[]> {
+  const products = await fetchProducts(filters);
+  return products.map(toProductDto);
+}
 
 export async function getProducts(
   fetchProducts: typeof findProducts = findProducts,

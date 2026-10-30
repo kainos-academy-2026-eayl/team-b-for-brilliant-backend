@@ -1,6 +1,7 @@
 import * as z from 'zod';
 
 export const ProductSearchSchema = z.string().trim().min(1);
+export const ProductCategoryFilterSchema = z.string().trim().min(1);
 
 export const CreateProductSchema = z.object({
   name: z.string().trim().min(1),
