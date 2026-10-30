@@ -11,15 +11,12 @@ function authApp(verify: typeof verifyCredentials) {
   const app = express();
   app.use(
     '/auth',
-    createAuthRouter(
-      {
-        verifyCredentials: verify,
-        uniqueEmail: async () => {
-          assert.fail('Email uniqueness must not be checked during credential verification');
-        },
+    createAuthRouter({
+      verifyCredentials: verify,
+      uniqueEmail: async () => {
+        assert.fail('Email uniqueness must not be checked during credential verification');
       },
-      (customerID) => `token-for-${customerID}`,
-    ),
+    }),
   );
   return app;
 }
@@ -69,7 +66,6 @@ test('the credentials endpoint returns customerId and an authenticated access to
     .post('/auth/verify')
     .send({ email: 'user@example.com', password: 'password123' })
     .expect(200);
-  assert.deepEqual(response.body, { customerId: 'user-1', token: 'token-for-user-1' });
   assert.equal(response.body.customerId, 'user-1');
   assert.equal(typeof response.body.accessToken, 'string');
   assert.equal(getCustomerIDForToken(response.body.accessToken), 'user-1');

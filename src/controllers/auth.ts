@@ -27,7 +27,6 @@ export function createAuthRouter(
     verifyCredentials: (email: string, password: string) => Promise<VerifyCredentialsResult>;
     uniqueEmail: (email: string) => Promise<UniqueEmailResult>;
   } = authServices,
-  issueToken: (customerID: string) => string = createSession,
 ): Router {
   const router = Router();
   router.use(json());
