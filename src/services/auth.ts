@@ -13,7 +13,7 @@ export async function verifyCredentials(
   password: string,
   findCustomer: typeof findCustomerByEmail = findCustomerByEmail,
 ): Promise<VerifyCredentialsResult> {
-  const customer = await findCustomer(email.trim());
+  const customer = await findCustomer(email.trim().toLowerCase());
   if (customer === null) return { status: 'not_found' };
 
   if (!(await comparePasswords(password, customer.passwordHash))) return { status: 'invalid' };
@@ -25,6 +25,6 @@ export async function uniqueEmail(
   email: string,
   findCustomer: typeof findCustomerByEmail = findCustomerByEmail,
 ): Promise<UniqueEmailResult> {
-  const customer = await findCustomer(email.trim());
+  const customer = await findCustomer(email.trim().toLowerCase());
   return { unique: customer === null };
 }

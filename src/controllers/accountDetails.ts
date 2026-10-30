@@ -1,12 +1,24 @@
 import { Router } from 'express';
 import { sendErrorResponse } from '../errors/httpError';
 import { requireCustomer } from '../middleware/requireCustomer';
-import { saveAccountDetails } from '../repositories/accountDetails';
+import { listSecurityQuestions } from '../repositories/securityQuestions';
 import { accountDetailsSchema } from '../schemas/accountDetails';
+import { saveCustomerDetails } from '../services/accountDetails';
 
-export function createAccountDetailsRouter(save = saveAccountDetails): Router {
+export function createAccountDetailsRouter(
+  save = saveCustomerDetails,
+  listQuestions = listSecurityQuestions,
+): Router {
   const router = Router();
   router.use(requireCustomer);
+
+  router.get('/security-questions', async (_req, res) => {
+    try {
+      res.json({ questions: await listQuestions() });
+    } catch (error) {
+      sendErrorResponse(error, res);
+    }
+  });
 
   router.put('/details', async (req, res) => {
     const input = accountDetailsSchema.safeParse(req.body);

@@ -10,6 +10,12 @@ export async function saveAccountDetails(customerID: string, details: AccountDet
       addressLine1: details.addressLine1 || null,
       addressLine2: details.addressLine2 || null,
       postcode: details.postcode || null,
+      ...(details.securityQuestionID && details.securityAnswer
+        ? {
+            securityQuestionID: details.securityQuestionID,
+            securityAnswer: details.securityAnswer,
+          }
+        : {}),
     },
   });
 }
