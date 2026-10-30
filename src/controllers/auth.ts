@@ -6,6 +6,7 @@ import {
   type VerifyCredentialsResult,
   verifyCredentials,
 } from '../services/auth';
+import { createSession } from '../services/sessions';
 
 const verifyBodySchema = z.object({
   email: z.string().min(1),
@@ -47,7 +48,10 @@ export function createAuthRouter(
         res.status(401).json({ error: 'Invalid credentials' });
         return;
       case 'valid':
-        res.json({ customerId: result.customerId });
+        res.json({
+          customerId: result.customerId,
+          accessToken: createSession(result.customerId),
+        });
     }
   });
 

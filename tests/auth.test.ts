@@ -5,6 +5,7 @@ import request from 'supertest';
 import { createAuthRouter } from '../src/controllers/auth';
 import { uniqueEmail, verifyCredentials } from '../src/services/auth';
 import { hashPassword } from '../src/services/password';
+import { endSession, getCustomerIDForToken } from '../src/services/sessions';
 
 function authApp(verify: typeof verifyCredentials) {
   const app = express();
@@ -55,7 +56,7 @@ test('credential lookup failures propagate', async () => {
   );
 });
 
-test('the credentials endpoint returns only customerId on success', async () => {
+test('the credentials endpoint returns customerId and an authenticated access token on success', async () => {
   const app = authApp(async (email, password) => {
     assert.equal(email, 'user@example.com');
     assert.equal(password, 'password123');
@@ -65,7 +66,11 @@ test('the credentials endpoint returns only customerId on success', async () => 
     .post('/auth/verify')
     .send({ email: 'user@example.com', password: 'password123' })
     .expect(200);
-  assert.deepEqual(response.body, { customerId: 'user-1' });
+  assert.equal(response.body.customerId, 'user-1');
+  assert.equal(typeof response.body.accessToken, 'string');
+  assert.equal(getCustomerIDForToken(response.body.accessToken), 'user-1');
+  assert.equal(response.body.mfaEnabled, undefined);
+  endSession(response.body.accessToken);
 });
 
 test('the credentials endpoint preserves invalid and missing account responses', async () => {
