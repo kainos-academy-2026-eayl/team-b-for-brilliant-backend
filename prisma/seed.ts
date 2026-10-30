@@ -1,5 +1,5 @@
 import { prisma } from '../src/prismaClient';
-import { hashPassword } from '../src/utils/password';
+import { hashPassword } from '../src/services/password';
 
 async function main() {
   await prisma.$transaction(async (transaction) => {

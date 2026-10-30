@@ -29,3 +29,15 @@ export async function findProduct(productID: string): Promise<ProductWithRelatio
     },
   });
 }
+
+export async function findProductsByName(name: string): Promise<ProductWithRelations[]> {
+  const { prisma } = await import('../prismaClient');
+
+  return prisma.product.findMany({
+    where: { name: { contains: name, mode: 'insensitive' } },
+    include: {
+      productImages: true,
+      productCategories: { include: { category: { include: { department: true } } } },
+    },
+  });
+}
