@@ -1,5 +1,6 @@
 import { json, type Request, type Response, Router } from 'express';
 import { z } from 'zod';
+import { createSession } from '../services/sessions';
 import { type UniqueEmailResult, type VerifyCredentialsResult, verifyCredentials, uniqueEmail } from '../services/auth';
 
 const verifyBodySchema = z.object({
@@ -21,6 +22,7 @@ export function createAuthRouter(
     verifyCredentials: (email: string, password: string) => Promise<VerifyCredentialsResult>;
     uniqueEmail: (email: string) => Promise<UniqueEmailResult>;
   } = authServices,
+  issueToken: (customerID: string) => string = createSession,
 ): Router {
   const router = Router();
   router.use(json());
@@ -42,7 +44,7 @@ export function createAuthRouter(
         res.status(401).json({ error: 'Invalid credentials' });
         return;
       case 'valid':
-        res.json({ customerId: result.customerId });
+        res.json({ customerId: result.customerId, token: issueToken(result.customerId) });
     }
   });
 

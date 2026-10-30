@@ -13,7 +13,7 @@ function authApp(verify: typeof verifyCredentials) {
     uniqueEmail: async () => {
       assert.fail('Email uniqueness must not be checked during credential verification');
     },
-  }));
+  }, (customerID) => `token-for-${customerID}`));
   return app;
 }
 
@@ -52,7 +52,7 @@ test('credential lookup failures propagate', async () => {
   );
 });
 
-test('the credentials endpoint returns only customerId on success', async () => {
+test('the credentials endpoint returns the customerId and a session token on success', async () => {
   const app = authApp(async (email, password) => {
     assert.equal(email, 'user@example.com');
     assert.equal(password, 'password123');
@@ -62,7 +62,7 @@ test('the credentials endpoint returns only customerId on success', async () => 
     .post('/auth/verify')
     .send({ email: 'user@example.com', password: 'password123' })
     .expect(200);
-  assert.deepEqual(response.body, { customerId: 'user-1' });
+  assert.deepEqual(response.body, { customerId: 'user-1', token: 'token-for-user-1' });
 });
 
 test('the credentials endpoint preserves invalid and missing account responses', async () => {
