@@ -28,7 +28,8 @@ export function createApp(
   // Ignored in production and never applies to deletes.
   const adminOrOpenDiscountReads: RequestHandler = (req, res, next) => {
     const openReads =
-      process.env.ALLOW_ANONYMOUS_DISCOUNT_READS === 'true' && process.env.NODE_ENV !== 'production';
+      process.env.ALLOW_ANONYMOUS_DISCOUNT_READS === 'true' &&
+      process.env.NODE_ENV !== 'production';
     if (openReads && req.method === 'GET') {
       next();
       return;
