@@ -216,7 +216,7 @@ HTTP 200 with `{ "unique": true }` or `{ "unique": false }`. Clients must read
 the boolean response, not infer uniqueness from the HTTP status.
 
 `POST /auth/verify` accepts an email address and password. Valid credentials return
-HTTP 200 with `{ "customerId": "<userID>", "accessToken": "<token>" }`;
+HTTP 200 with `{ "message": "Login successful", "customerId": "<userID>", "accessToken": "<token>" }`;
 no MFA flag is queried or returned. The access token uses the existing in-memory
 session store, expires after one hour, and is sent as `Authorization: Bearer
 <token>` for authenticated account requests. Tokens are local to the backend

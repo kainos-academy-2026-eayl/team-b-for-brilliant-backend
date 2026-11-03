@@ -49,6 +49,7 @@ export function createAuthRouter(
         return;
       case 'valid':
         res.json({
+          message: 'Login successful',
           customerId: result.customerId,
           accessToken: createSession(result.customerId),
         });
