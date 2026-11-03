@@ -25,9 +25,9 @@ test('valid credentials return the user ID without an MFA flag', async () => {
   const passwordHash = await hashPassword('password123');
   const result = await verifyCredentials(' user@example.com ', 'password123', async (email) => {
     assert.equal(email, 'user@example.com');
-    return { customerID: 'user-1', passwordHash };
+    return { customerID: 'user-1', passwordHash, accessLevel: null };
   });
-  assert.deepEqual(result, { status: 'valid', customerId: 'user-1' });
+  assert.deepEqual(result, { status: 'valid', customerId: 'user-1', accessLevel: 0 });
 });
 
 test('incorrect passwords remain invalid', async () => {
@@ -35,6 +35,7 @@ test('incorrect passwords remain invalid', async () => {
   const result = await verifyCredentials('user@example.com', 'incorrect', async () => ({
     customerID: 'user-1',
     passwordHash,
+    accessLevel: 0,
   }));
   assert.deepEqual(result, { status: 'invalid' });
 });
@@ -60,7 +61,7 @@ test('the credentials endpoint returns customerId and an authenticated access to
   const app = authApp(async (email, password) => {
     assert.equal(email, 'user@example.com');
     assert.equal(password, 'password123');
-    return { status: 'valid', customerId: 'user-1' };
+    return { status: 'valid', customerId: 'user-1', accessLevel: 1 };
   });
   const response = await request(app)
     .post('/auth/verify')
@@ -68,6 +69,10 @@ test('the credentials endpoint returns customerId and an authenticated access to
     .expect(200);
   assert.equal(response.body.customerId, 'user-1');
   assert.equal(typeof response.body.accessToken, 'string');
+  const tokenPayload = JSON.parse(
+    Buffer.from(response.body.accessToken.split('.')[1], 'base64url').toString('utf8'),
+  );
+  assert.equal(tokenPayload.accessLevel, 1);
   assert.equal(getCustomerIDForToken(response.body.accessToken), 'user-1');
   assert.equal(response.body.mfaEnabled, undefined);
   endSession(response.body.accessToken);
@@ -147,6 +152,7 @@ test('email uniqueness service distinguishes existing and missing accounts', asy
     await uniqueEmail('user@example.com', async () => ({
       customerID: 'user-1',
       passwordHash: 'unused',
+      accessLevel: null,
     })),
     { unique: false },
   );

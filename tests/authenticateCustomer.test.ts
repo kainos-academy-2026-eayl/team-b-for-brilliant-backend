@@ -4,6 +4,7 @@ import express from 'express';
 import request from 'supertest';
 import { createApp } from '../src/app';
 import { createAuthenticateCustomer } from '../src/middleware/authenticateCustomer';
+import { requireAdmin } from '../src/middleware/requireAdmin';
 import { requireCustomer } from '../src/middleware/requireCustomer';
 import { createSession, endSession, getCustomerIDForToken } from '../src/services/sessions';
 
@@ -16,7 +17,7 @@ function createProtectedApp() {
   return app;
 }
 
-test('a valid session token identifies the customer', async () => {
+test('a valid JWT identifies the customer and has a one-day lifetime', async () => {
   const token = createSession('customer-1');
   const response = await request(createProtectedApp())
     .get('/whoami')
@@ -24,6 +25,12 @@ test('a valid session token identifies the customer', async () => {
     .expect(200);
 
   assert.deepEqual(response.body, { customerID: 'customer-1' });
+  const encodedPayload = token.split('.')[1];
+  assert.ok(encodedPayload);
+  const payload = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString('utf8'));
+  assert.equal(payload.sub, 'customer-1');
+  assert.equal(payload.accessLevel, 0);
+  assert.equal(payload.exp - payload.iat, 24 * 60 * 60);
 });
 
 test('requests without a token, or with a bad token, are rejected', async () => {
@@ -65,11 +72,45 @@ test('an identity set earlier in the request is overwritten by the token check',
 test('ended and expired sessions stop working', () => {
   const token = createSession('customer-3', 0);
   assert.equal(getCustomerIDForToken(token, 1000), 'customer-3');
-  assert.equal(getCustomerIDForToken(token, 60 * 60 * 1000), null);
+  assert.equal(getCustomerIDForToken(token, 24 * 60 * 60 * 1000), null);
 
   const other = createSession('customer-4');
   assert.equal(endSession(other), true);
   assert.equal(getCustomerIDForToken(other), null);
+});
+
+test('only a verified admin access-level claim passes admin authorization', async () => {
+  const app = express();
+  app.use(createAuthenticateCustomer());
+  app.get('/admin', requireCustomer, requireAdmin, (_req, res) => {
+    res.json({ ok: true });
+  });
+
+  await request(app).get('/admin').expect(401);
+  await request(app)
+    .get('/admin')
+    .set('Authorization', `Bearer ${createSession('customer-1')}`)
+    .expect(403);
+  await request(app)
+    .get('/admin')
+    .set('Authorization', `Bearer ${createSession('admin-1', Date.now(), 1)}`)
+    .expect(200);
+});
+
+test('changing a customer JWT claim to admin invalidates its signature', async () => {
+  const token = createSession('customer-1');
+  const [header, encodedPayload, signature] = token.split('.');
+  assert.ok(encodedPayload);
+  const payload = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString('utf8'));
+  payload.accessLevel = 1;
+  const modifiedToken = `${header}.${Buffer.from(JSON.stringify(payload)).toString('base64url')}.${signature}`;
+
+  const app = express();
+  app.use(createAuthenticateCustomer());
+  app.get('/admin', requireCustomer, requireAdmin, (_req, res) => {
+    res.json({ ok: true });
+  });
+  await request(app).get('/admin').set('Authorization', `Bearer ${modifiedToken}`).expect(401);
 });
 
 test('session tokens are unique and unguessable in length', () => {
