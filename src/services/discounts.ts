@@ -3,21 +3,21 @@ import { HttpError } from '../errors/httpError';
 import { toDiscountDto } from '../mappers/discount';
 import {
   createDiscountRecord,
-  deleteDiscountByID,
   findAllDiscounts,
+  updateDiscountExpiry,
 } from '../repositories/discounts';
 import type { CreateDiscountInput } from '../schemas/discount';
 
 export type DiscountRepository = {
   findAllDiscounts: typeof findAllDiscounts;
-  deleteDiscountByID: typeof deleteDiscountByID;
   createDiscountRecord: typeof createDiscountRecord;
+  updateDiscountExpiry: typeof updateDiscountExpiry;
 };
 
 export const discountRepository: DiscountRepository = {
   findAllDiscounts,
-  deleteDiscountByID,
   createDiscountRecord,
+  updateDiscountExpiry,
 };
 
 export async function getDiscounts(
@@ -25,17 +25,6 @@ export async function getDiscounts(
 ): Promise<DiscountsResponseDto> {
   const discounts = await repo.findAllDiscounts();
   return { discounts: discounts.map(toDiscountDto) };
-}
-
-export async function deleteDiscount(
-  discountID: string,
-  repo: DiscountRepository = discountRepository,
-): Promise<void> {
-  const result = await repo.deleteDiscountByID(discountID);
-
-  if (result.count === 0) {
-    throw new HttpError(404, 'Discount not found');
-  }
 }
 
 export async function createDiscount(
@@ -49,4 +38,26 @@ export async function createDiscount(
   }
 
   return toDiscountDto(discount);
+}
+
+export async function setDiscountExpiry(
+  discountID: string,
+  expiryDate: Date,
+  repo: DiscountRepository = discountRepository,
+): Promise<DiscountDto> {
+  const discount = await repo.updateDiscountExpiry(discountID, expiryDate);
+
+  if (!discount) {
+    throw new HttpError(404, 'Discount not found');
+  }
+
+  return toDiscountDto(discount);
+}
+
+export function deactivateDiscount(
+  discountID: string,
+  repo: DiscountRepository = discountRepository,
+): Promise<DiscountDto> {
+  const today = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`);
+  return setDiscountExpiry(discountID, today, repo);
 }
