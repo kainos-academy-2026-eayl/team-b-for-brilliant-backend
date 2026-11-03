@@ -74,18 +74,24 @@ test('the credentials endpoint returns a success message, customerId and an auth
   endSession(response.body.accessToken);
 });
 
-test('the credentials endpoint preserves invalid and missing account responses', async () => {
+test('the credentials endpoint adds messages while preserving invalid and missing account errors', async () => {
   const invalid = await request(authApp(async () => ({ status: 'invalid' })))
     .post('/auth/verify')
     .send({ email: 'user@example.com', password: 'incorrect' })
     .expect(401);
-  assert.deepEqual(invalid.body, { error: 'Invalid credentials' });
+  assert.deepEqual(invalid.body, {
+    message: 'Invalid credentials',
+    error: 'Invalid credentials',
+  });
 
   const missing = await request(authApp(async () => ({ status: 'not_found' })))
     .post('/auth/verify')
     .send({ email: 'missing@example.com', password: 'password123' })
     .expect(404);
-  assert.deepEqual(missing.body, { error: 'Customer not found' });
+  assert.deepEqual(missing.body, {
+    message: 'Customer not found',
+    error: 'Customer not found',
+  });
 });
 
 test('the credentials endpoint rejects invalid input before lookup', async () => {
@@ -99,7 +105,10 @@ test('the credentials endpoint rejects invalid input before lookup', async () =>
     { email: 'user@example.com', password: '' },
   ]) {
     const response = await request(app).post('/auth/verify').send(body).expect(400);
-    assert.deepEqual(response.body, { error: 'email and password are required' });
+    assert.deepEqual(response.body, {
+      message: 'email and password are required',
+      error: 'email and password are required',
+    });
   }
 });
 

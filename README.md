@@ -224,6 +224,14 @@ process and are invalidated by a restart.
 The `customerId` response key is retained for compatibility with the frontend,
 while the account is stored in the `User` table. Incorrect passwords return
 HTTP 401, unknown accounts return HTTP 404, and invalid input returns HTTP 400.
+These failed login responses include both `message` and the existing `error` field
+with matching text:
+
+| HTTP status | `message` and `error` |
+| --- | --- |
+| 400 | `email and password are required` |
+| 401 | `Invalid credentials` |
+| 404 | `Customer not found` |
 
 ### Optional account details
 
