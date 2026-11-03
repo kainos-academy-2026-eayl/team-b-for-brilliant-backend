@@ -22,6 +22,8 @@ function createFakeRepo(stock: number, quantityInBasket?: number): BasketReposit
     weight: 1,
     salesNo: 0,
     deletedAt: null,
+    productImages: [],
+    productPrices: [],
   };
 
   const toItem = (quantity: number): BasketItemWithProduct => ({
@@ -35,6 +37,7 @@ function createFakeRepo(stock: number, quantityInBasket?: number): BasketReposit
   });
 
   const locked: LockedBasketQueries = {
+    findBasketItems: async () => (basketQuantity === undefined ? [] : [toItem(basketQuantity)]),
     findProductForBasket: async () => product,
     findBasketItem: async () => (basketQuantity === undefined ? null : toItem(basketQuantity)),
     saveBasketItemQuantity: async (_customerID, _productID, quantity) => {
@@ -62,10 +65,10 @@ test('basket shows low stock at 10 or fewer, but not above 10', async () => {
   assert.equal(normal.items[0]?.lowStock, false);
 });
 
-test('sold out is not reported as low stock', async () => {
+test('sold out items are removed from the basket with a notice', async () => {
   const soldOut = await getBasket('customer-1', createFakeRepo(0, 2));
-  assert.equal(soldOut.items[0]?.lowStock, false);
-  assert.equal(soldOut.items[0]?.isQuantityAvailable, false);
+  assert.equal(soldOut.items.length, 0);
+  assert.equal(soldOut.notices.length, 1);
 });
 
 test('adding to basket is rejected when the total would exceed stock', async () => {

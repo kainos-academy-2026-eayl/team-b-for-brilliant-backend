@@ -8,6 +8,8 @@ import { Prisma } from '../src/generated/prisma/client';
 import { createAuthenticateCustomer } from '../src/middleware/authenticateCustomer';
 import { validateActivateDiscount, validateCreateDiscount } from '../src/schemas/discount';
 import { deactivateDiscount, getDiscounts } from '../src/services/discounts';
+import { requireAdmin } from '../src/middleware/requireAdmin';
+import { deleteDiscount, getDiscounts } from '../src/services/discounts';
 import { createSession } from '../src/services/sessions';
 
 const savedDiscount = {
@@ -58,7 +60,34 @@ test('getDiscounts maps stored discounts to DTOs', async () => {
   });
 });
 
-test('GET /discounts returns the list for a logged-in user', async () => {
+test('deleteDiscount throws 404 when nothing was deleted', async () => {
+  await assert.rejects(
+    deleteDiscount('missing', {
+      findAllDiscounts: async () => [],
+      deleteDiscountByID: async () => ({ count: 0 }),
+    }),
+    (error: unknown) => error instanceof HttpError && error.status === 404,
+  );
+});
+
+test('GET /discounts requires login', async () => {
+  const app = createTestApp();
+  await request(app).get('/discounts').expect(401);
+});
+
+test('GET /discounts rejects users who are not admins', async () => {
+  const app = createTestApp();
+  const token = createSession('customer-1');
+  await request(app).get('/discounts').set('Authorization', `Bearer ${token}`).expect(403);
+});
+
+test('GET /discounts rejects users with no role', async () => {
+  const app = createTestApp();
+  const token = createSession('customer-1');
+  await request(app).get('/discounts').set('Authorization', `Bearer ${token}`).expect(403);
+});
+
+test('GET /discounts returns the list for an admin', async () => {
   const app = createTestApp({
     getDiscounts: async () => ({
       discounts: [
@@ -81,7 +110,7 @@ test('GET /discounts returns the list for a logged-in user', async () => {
       throw new Error('not used');
     },
   });
-  const token = createSession('customer-1');
+  const token = createSession('admin-1', Date.now(), 1);
   const response = await request(app)
     .get('/discounts')
     .set('Authorization', `Bearer ${token}`)
@@ -208,7 +237,8 @@ test('POST /discounts/:id/deactivate and /activate work for logged-in users', as
       expiryDate: expiryDate.toISOString(),
     }),
   });
-  const token = createSession('customer-1');
+  const adminToken = createSession('admin-1', Date.now(), 1);
+  const customerToken = createSession('customer-1');
 
   const deactivated = await request(app)
     .post('/discounts/discount-1/deactivate')

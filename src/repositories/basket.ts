@@ -1,8 +1,13 @@
 import type { Prisma } from '../generated/prisma/client';
 import { lockCustomer } from './customerLock';
 
+const basketProductInclude = {
+  productImages: { orderBy: { imageOrder: 'asc' }, take: 1 },
+  productPrices: { orderBy: [{ createdAt: 'desc' }, { priceID: 'desc' }], take: 1 },
+} satisfies Prisma.ProductInclude;
+
 export type BasketItemWithProduct = Prisma.BasketGetPayload<{
-  include: { product: true };
+  include: { product: { include: typeof basketProductInclude } };
 }>;
 
 export async function findBasketItems(userID: string): Promise<BasketItemWithProduct[]> {
@@ -10,7 +15,7 @@ export async function findBasketItems(userID: string): Promise<BasketItemWithPro
 
   return prisma.basket.findMany({
     where: { userID },
-    include: { product: true },
+    include: { product: { include: basketProductInclude } },
     orderBy: { createdAt: 'asc' },
   });
 }
@@ -18,13 +23,20 @@ export async function findBasketItems(userID: string): Promise<BasketItemWithPro
 // Reads and writes that must only run while the customer's lock is held
 export function createLockedBasketQueries(db: Prisma.TransactionClient) {
   return {
+    findBasketItems: (userID: string): Promise<BasketItemWithProduct[]> =>
+      db.basket.findMany({
+        where: { userID },
+        include: { product: { include: basketProductInclude } },
+        orderBy: { createdAt: 'asc' },
+      }),
+
     findProductForBasket: async (productID: string) =>
       db.product.findUnique({ where: { productID } }),
 
     findBasketItem: (userID: string, productID: string): Promise<BasketItemWithProduct | null> =>
       db.basket.findUnique({
         where: { userID_productID: { userID, productID } },
-        include: { product: true },
+        include: { product: { include: basketProductInclude } },
       }),
 
     saveBasketItemQuantity: (
@@ -36,7 +48,7 @@ export function createLockedBasketQueries(db: Prisma.TransactionClient) {
         where: { userID_productID: { userID, productID } },
         create: { userID, productID, quantity },
         update: { quantity },
-        include: { product: true },
+        include: { product: { include: basketProductInclude } },
       }),
 
     deleteBasketItem: async (userID: string, productID: string) =>
