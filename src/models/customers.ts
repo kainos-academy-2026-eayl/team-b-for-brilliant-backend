@@ -1,6 +1,7 @@
 export interface CustomerCredentials {
   customerID: string;
   passwordHash: string;
+  accessLevel: number | null;
 }
 
 export async function findCustomerByEmail(email: string): Promise<CustomerCredentials | null> {
@@ -8,8 +9,14 @@ export async function findCustomerByEmail(email: string): Promise<CustomerCreden
 
   const user = await prisma.user.findUnique({
     where: { email },
-    select: { userID: true, passwordHash: true },
+    select: { userID: true, passwordHash: true, role: { select: { accessLevel: true } } },
   });
 
-  return user ? { customerID: user.userID, passwordHash: user.passwordHash } : null;
+  return user
+    ? {
+        customerID: user.userID,
+        passwordHash: user.passwordHash,
+        accessLevel: user.role?.accessLevel ?? 0,
+      }
+    : null;
 }

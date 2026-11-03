@@ -1,0 +1,13 @@
+import type { NextFunction, Request, Response } from 'express';
+
+export function requireAdmin(_req: Request, res: Response, next: NextFunction): void {
+  if (typeof res.locals.customerID !== 'string') {
+    res.status(401).json({ error: 'Login required' });
+    return;
+  }
+  if (res.locals.accessLevel !== 1) {
+    res.status(403).json({ error: 'Admin access required' });
+    return;
+  }
+  next();
+}
