@@ -1,7 +1,23 @@
 import { HttpError } from '../errors/httpError';
+import type { CheckoutInput } from '../schemas/checkout';
+import { findUsableDiscount } from '../services/discountCodes';
+import {
+  calculateOrderTotals,
+  type OrderTotalsDto,
+  toPence,
+  toTotalsDto,
+} from '../services/orderTotals';
+import { processPayment } from '../services/payments';
 import { lockCustomer } from './customerLock';
 
-export async function completeCheckout(userID: string): Promise<{ orderID: string }> {
+export interface CompletedCheckout extends OrderTotalsDto {
+  orderID: string;
+}
+
+export async function completeCheckout(
+  userID: string,
+  input: CheckoutInput,
+): Promise<CompletedCheckout> {
   const { prisma } = await import('../prismaClient');
 
   return prisma.$transaction(async (transaction) => {
@@ -21,6 +37,8 @@ export async function completeCheckout(userID: string): Promise<{ orderID: strin
       data: { userID },
       select: { orderID: true },
     });
+
+    let subtotalPence = 0;
 
     for (const item of basketItems) {
       const { product } = item;
@@ -56,7 +74,34 @@ export async function completeCheckout(userID: string): Promise<{ orderID: strin
           unitPrice: latestPrice.price,
         },
       });
+
+      subtotalPence += toPence(latestPrice.price) * item.quantity;
     }
+
+    // The total is always worked out here, never taken from the browser
+    const discount = input.discountCode
+      ? await findUsableDiscount(input.discountCode, transaction)
+      : null;
+    const totals = calculateOrderTotals(subtotalPence, discount);
+
+    // If the card is declined this throws, the whole transaction rolls back and no order exists
+    const payment = await processPayment(input.card);
+
+    await transaction.order.update({
+      where: { orderID: order.orderID },
+      data: {
+        discountID: discount?.discountID ?? null,
+        deliveryFirstname: input.delivery.firstname,
+        deliverySurname: input.delivery.surname,
+        deliveryAddressLine1: input.delivery.addressLine1,
+        deliveryAddressLine2: input.delivery.addressLine2,
+        deliveryPostcode: input.delivery.postcode,
+        deliveryCharge: totals.deliveryPence / 100,
+        discountAmount: totals.discountPence / 100,
+        paymentStatus: payment.status,
+        cardLast4: payment.last4,
+      },
+    });
 
     const soldOut = await transaction.product.findMany({
       where: {
@@ -72,6 +117,6 @@ export async function completeCheckout(userID: string): Promise<{ orderID: strin
       },
     });
 
-    return { orderID: order.orderID };
+    return { orderID: order.orderID, ...toTotalsDto(totals) };
   });
 }

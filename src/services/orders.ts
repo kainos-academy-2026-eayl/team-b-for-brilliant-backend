@@ -27,13 +27,19 @@ export function toOrderDto(order: OrderRecord): OrderDto {
       lineTotal: formatPounds(linePence),
     };
   });
-  const totalPence = items.reduce((sum, item) => sum + toPence(item.lineTotal), 0);
+  const itemsPence = items.reduce((sum, item) => sum + toPence(item.lineTotal), 0);
+  // Orders placed before delivery charges and discounts existed have neither stored
+  const discountPence = order.discountAmount ? toPence(order.discountAmount.toString()) : 0;
+  const deliveryPence = order.deliveryCharge ? toPence(order.deliveryCharge.toString()) : 0;
 
   return {
     orderID: order.orderID,
     placedAt: order.createdAt.toISOString(),
     items,
-    total: formatPounds(totalPence),
+    subtotal: formatPounds(itemsPence),
+    discount: formatPounds(discountPence),
+    delivery: formatPounds(deliveryPence),
+    total: formatPounds(itemsPence - discountPence + deliveryPence),
   };
 }
 
