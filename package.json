@@ -18,7 +18,7 @@
     "pretypecheck": "npm run prisma:generate",
     "typecheck": "tsc",
     "start": "node dist/index.js",
-    "test": "node --import tsx --test tests/*.test.ts"
+    "test": "node --import tsx --import ./tests/setup.ts --test tests/*.test.ts"
   },
   "keywords": [],
   "author": "John & Luke",
@@ -27,6 +27,7 @@
     "@biomejs/biome": "2.5.15",
     "@types/cors": "^2.8.19",
     "@types/express": "5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "26.4.1",
     "@types/supertest": "7.2.1",
     "esbuild": "0.28.2",
@@ -43,6 +44,7 @@
     "cors": "^2.8.6",
     "dotenv": "17.4.2",
     "express": "5.2.1",
+    "jsonwebtoken": "^9.0.3",
     "zod": "4.6.7"
   }
 }

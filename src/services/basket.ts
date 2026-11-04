@@ -24,8 +24,34 @@ export async function getBasket(
   customerID: string,
   repo: BasketRepository = basketRepository,
 ): Promise<BasketDto> {
-  const items = await repo.findBasketItems(customerID);
-  return { items: items.map(toBasketItemDto) };
+  return repo.withCustomerLock(customerID, async (queries) => {
+    const rows = await queries.findBasketItems(customerID);
+    const notices: string[] = [];
+    const items: BasketItemDto[] = [];
+
+    for (const row of rows) {
+      const { product } = row;
+      const stock = product.quantity;
+      const unavailable = !product.visible || product.draft || product.deletedAt !== null;
+
+      if (stock <= 0 || unavailable) {
+        await queries.deleteBasketItem(customerID, row.productID);
+        notices.push(`${product.name} was removed from your basket because it is out of stock.`);
+        continue;
+      }
+
+      if (row.quantity > stock) {
+        const saved = await queries.saveBasketItemQuantity(customerID, row.productID, stock);
+        notices.push(`We reduced ${product.name} to ${stock} because only ${stock} are left.`);
+        items.push(toBasketItemDto(saved));
+        continue;
+      }
+
+      items.push(toBasketItemDto(row));
+    }
+
+    return { items, notices };
+  });
 }
 
 export async function addToBasket(

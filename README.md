@@ -201,9 +201,11 @@ This is input validation only: it does not save products or add a POST endpoint.
 Passwords are hashed before the account is created. Registration does not send
 email or require an email-verification token.
 
-New and already-registered addresses both receive HTTP 202 with
-`{ "message": "Registration request processed" }` to avoid revealing whether an
-account exists. Invalid input returns HTTP 400; registration failures return
+New accounts receive HTTP 202 with a message, `customerId`, `accessLevel: 0`, and
+an `accessToken` JWT, allowing them to make authenticated requests immediately.
+Already-registered addresses receive HTTP 202 with only
+`{ "message": "Registration request processed" }`; they must sign in through
+`/auth/verify`. Invalid input returns HTTP 400; registration failures return
 HTTP 500. The former verification and resend-verification endpoints are removed.
 
 ### Credential verification
