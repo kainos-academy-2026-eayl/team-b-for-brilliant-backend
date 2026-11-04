@@ -67,6 +67,35 @@ export const CreateDiscountSchema = z
 
 export type CreateDiscountInput = z.output<typeof CreateDiscountSchema>;
 
+export const ActivateDiscountSchema = z
+  .object({ expiryDate: z.string().trim() })
+  .superRefine((input, ctx) => {
+    if (!parseDate(input.expiryDate)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['expiryDate'],
+        message: 'Expiry date must be a valid date in the format YYYY-MM-DD',
+      });
+    } else if (input.expiryDate < new Date().toISOString().slice(0, 10)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['expiryDate'],
+        message: 'Expiry date cannot be in the past',
+      });
+    }
+  })
+  .transform((input) => new Date(`${input.expiryDate}T00:00:00.000Z`));
+
+export function validateActivateDiscount(input: unknown) {
+  const result = ActivateDiscountSchema.safeParse(input);
+
+  if (!result.success) {
+    return { success: false as const, errors: z.flattenError(result.error) };
+  }
+
+  return { success: true as const, expiryDate: result.data };
+}
+
 export function validateCreateDiscount(input: unknown) {
   const result = CreateDiscountSchema.safeParse(input);
 

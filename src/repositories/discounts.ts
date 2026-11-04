@@ -7,10 +7,18 @@ export async function findAllDiscounts() {
   return prisma.discounts.findMany({ orderBy: [{ code: 'asc' }, { discountID: 'asc' }] });
 }
 
-export async function deleteDiscountByID(discountID: string) {
+// Returns null when the discount does not exist
+export async function updateDiscountExpiry(discountID: string, expiryDate: Date) {
   const { prisma } = await import('../prismaClient');
 
-  return prisma.discounts.deleteMany({ where: { discountID } });
+  try {
+    return await prisma.discounts.update({ where: { discountID }, data: { expiryDate } });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      return null;
+    }
+    throw error;
+  }
 }
 
 // Returns null when the code already exists (also covers two simultaneous requests)
