@@ -7,10 +7,23 @@ export type ProductWithRelations = Prisma.ProductGetPayload<{
   };
 }>;
 
-export async function findProducts(): Promise<ProductWithRelations[]> {
+export interface ProductFilters {
+  name?: string;
+  categoryID?: string;
+}
+
+export async function findProducts(filters: ProductFilters = {}): Promise<ProductWithRelations[]> {
   const { prisma } = await import('../prismaClient');
 
   return prisma.product.findMany({
+    where: {
+      ...(filters.name === undefined
+        ? {}
+        : { name: { contains: filters.name, mode: 'insensitive' as const } }),
+      ...(filters.categoryID === undefined
+        ? {}
+        : { productCategories: { some: { categoryID: filters.categoryID } } }),
+    },
     include: {
       productImages: true,
       productCategories: { include: { category: { include: { department: true } } } },
@@ -31,13 +44,5 @@ export async function findProduct(productID: string): Promise<ProductWithRelatio
 }
 
 export async function findProductsByName(name: string): Promise<ProductWithRelations[]> {
-  const { prisma } = await import('../prismaClient');
-
-  return prisma.product.findMany({
-    where: { name: { contains: name, mode: 'insensitive' } },
-    include: {
-      productImages: true,
-      productCategories: { include: { category: { include: { department: true } } } },
-    },
-  });
+  return findProducts({ name });
 }

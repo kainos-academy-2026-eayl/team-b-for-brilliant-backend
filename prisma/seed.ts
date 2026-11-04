@@ -3,9 +3,31 @@ import { hashPassword } from '../src/services/password';
 
 async function main() {
   await prisma.$transaction(async (transaction) => {
+    const departmentID = 'department-beauty';
+
+    await transaction.department.upsert({
+      where: { departmentID },
+      create: { departmentID, name: 'Beauty' },
+      update: { name: 'Beauty' },
+    });
+
+    const categories = [
+      { categoryID: 'category-skincare', name: 'Skincare' },
+      { categoryID: 'category-makeup', name: 'Makeup' },
+      { categoryID: 'category-looksmaxxing', name: 'Looksmaxxing' },
+    ];
+    for (const category of categories) {
+      await transaction.category.upsert({
+        where: { categoryID: category.categoryID },
+        create: { ...category, departmentID },
+        update: { name: category.name, departmentID },
+      });
+    }
+
     const products = [
       {
         productID: 'product-1',
+        categoryID: 'category-skincare',
         name: 'Hyaluronic Acid Serum',
         description:
           'Deep hydrating serum with hyaluronic acid, plumps skin for a glowing complexion',
@@ -18,6 +40,7 @@ async function main() {
       },
       {
         productID: 'product-2',
+        categoryID: 'category-makeup',
         name: 'Full Coverage Foundation',
         description: 'Professional-grade full coverage foundation, matte finish, 24-hour wear',
         quantity: 45,
@@ -29,6 +52,7 @@ async function main() {
       },
       {
         productID: 'product-3',
+        categoryID: 'category-makeup',
         name: 'Volumizing Mascara',
         description: 'Volumizing mascara with conditioning formula, dramatic lashes in one coat',
         quantity: 22,
@@ -40,6 +64,7 @@ async function main() {
       },
       {
         productID: 'product-4',
+        categoryID: 'category-skincare',
         name: 'Retinol Night Cream',
         description: 'Anti-aging retinol night cream, reduces fine lines and wrinkles',
         quantity: 18,
@@ -51,6 +76,7 @@ async function main() {
       },
       {
         productID: 'product-5',
+        categoryID: 'category-makeup',
         name: 'Liquid Lipstick Set',
         description:
           'Set of 12 liquid lipsticks in various shades, waterproof long-lasting formula',
@@ -63,6 +89,7 @@ async function main() {
       },
       {
         productID: 'product-6',
+        categoryID: 'category-skincare',
         name: 'Korean Sheet Mask Pack',
         description: '10-pack of hydrating sheet masks with essence, brightening formula',
         quantity: 60,
@@ -74,6 +101,7 @@ async function main() {
       },
       {
         productID: 'product-7',
+        categoryID: 'category-makeup',
         name: 'Luxury Makeup Brush Set',
         description: '24-piece synthetic makeup brush set, includes face and eye brushes',
         quantity: 12,
@@ -85,6 +113,7 @@ async function main() {
       },
       {
         productID: 'product-8',
+        categoryID: 'category-skincare',
         name: 'Hydrating Lip Balm',
         description: 'Nourishing lip balm with vitamin E, prevents chapping',
         quantity: 55,
@@ -96,6 +125,7 @@ async function main() {
       },
       {
         productID: 'product-9',
+        categoryID: 'category-looksmaxxing',
         name: 'Bone Smashing Hammer',
         description:
           'Professional-grade titanium bone smashing hammer for looksmaxxing, ergonomic design',
@@ -108,6 +138,7 @@ async function main() {
       },
       {
         productID: 'product-10',
+        categoryID: 'category-makeup',
         name: 'Limited Edition Eyeshadow Palette',
         description: 'This palette is out of stock and discontinued',
         quantity: 0,
@@ -120,11 +151,17 @@ async function main() {
     ];
 
     for (const product of products) {
-      const { productID, ...data } = product;
+      const { productID, categoryID, ...data } = product;
       await transaction.product.upsert({
         where: { productID },
-        create: product,
+        create: { productID, ...data },
         update: data,
+      });
+
+      await transaction.productCategories.upsert({
+        where: { productID_categoryID: { productID, categoryID } },
+        create: { productID, categoryID },
+        update: {},
       });
 
       const prices =

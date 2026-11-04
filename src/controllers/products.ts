@@ -1,8 +1,9 @@
 import { type Request, type Response, Router } from 'express';
 import type { ProductDto, ProductResponseDto, ProductsResponseDto } from '../dtos/product';
-import { ProductSearchSchema } from '../schemas/product';
+import type { ProductFilters } from '../repositories/products';
+import { ProductCategoryFilterSchema, ProductSearchSchema } from '../schemas/product';
 import { getCurrentProductPrice, getProductPrices } from '../services/productPrices';
-import { getProduct, getProductsByName } from '../services/products';
+import { getFilteredProducts, getProduct, getProductsByName } from '../services/products';
 
 export const productPriceServices = {
   getProductPrices: (productID: string) => getProductPrices(productID),
@@ -14,10 +15,25 @@ export function createProductsRouter(
   prices = productPriceServices,
   fetchProduct: (productID: string) => Promise<ProductDto | null> = getProduct,
   searchProducts: (name: string) => Promise<ProductDto[]> = getProductsByName,
+  filterProducts: (filters: ProductFilters) => Promise<ProductDto[]> = getFilteredProducts,
 ): Router {
   const router = Router();
 
   router.get('/', async (req: Request, res: Response<ProductsResponseDto | { error: string }>) => {
+    const category = req.query.category;
+    if (Object.keys(req.query).some((key) => key.startsWith('category['))) {
+      res.status(400).json({ error: 'Category must be a single non-empty ID' });
+      return;
+    }
+    const filters: ProductFilters = {};
+    if (category !== undefined) {
+      const parsedCategory = ProductCategoryFilterSchema.safeParse(category);
+      if (!parsedCategory.success) {
+        res.status(400).json({ error: 'Category must be a single non-empty ID' });
+        return;
+      }
+      filters.categoryID = parsedCategory.data;
+    }
     // Express's simple query parser leaves bracketed parameters as literal keys.
     if (Object.keys(req.query).some((key) => key.startsWith('search[') || key.startsWith('q['))) {
       res.status(400).json({ error: 'Search must be a single non-empty string' });
@@ -31,7 +47,8 @@ export function createProductsRouter(
 
     const input = search ?? query;
     if (input === undefined) {
-      const products = await fetchProducts();
+      const products =
+        filters.categoryID === undefined ? await fetchProducts() : await filterProducts(filters);
       res.json({ products });
       return;
     }
@@ -41,7 +58,11 @@ export function createProductsRouter(
       res.status(400).json({ error: 'Search must be a single non-empty string' });
       return;
     }
-    const products = await searchProducts(parsed.data);
+    filters.name = parsed.data;
+    const products =
+      filters.categoryID === undefined
+        ? await searchProducts(parsed.data)
+        : await filterProducts(filters);
     res.json({ products });
   });
 

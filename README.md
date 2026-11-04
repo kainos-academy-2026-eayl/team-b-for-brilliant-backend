@@ -86,6 +86,16 @@ The seeded image URL `/images/product-1.svg` points to an original sample
 illustration stored in `public/images/product-1.svg`.
 Prisma 7 runs seeding explicitly, not automatically after migration.
 
+The seed also upserts the Beauty department (`department-beauty`) and three
+categories, then assigns every seeded product:
+
+- Skincare (`category-skincare`): serum, night cream, sheet masks, and lip balm.
+- Makeup (`category-makeup`): foundation, mascara, lipstick, brushes, and eyeshadow.
+- Looksmaxxing (`category-looksmaxxing`): `product-9`.
+
+Product-category links use the compound product/category key, so rerunning
+the seed does not duplicate them. Other category assignments are preserved.
+
 `GET /products` returns `{ "products": [...] }`. Each product includes its
 `productImages` array, which is empty when the product has no images.
 Each image includes `imageID`, `productID`, `imageUrl`, and its integer
@@ -107,7 +117,12 @@ validation behavior. Both search endpoints return HTTP 200 with
 `{ "products": [] }` when nothing matches (the legacy search endpoint no longer
 returns HTTP 404 for an empty result). Database failures propagate as server errors.
 The response retains product images, categories, and departments.
-Search does not add category filtering; the backend currently ignores `category`.
+`GET /products?category=category-skincare` returns only products linked to that
+category ID. Combine it with `search` or `q` to require both a matching name and
+category. Category IDs are trimmed; empty, repeated, and structured category
+values return HTTP 400. An unknown category, or filters with no matching products,
+returns HTTP 200 with `{ "products": [] }`. Omitting category preserves name-only
+search and unfiltered listing behavior.
 
 ```sh
 curl 'http://localhost:3000/products?search=mug'
