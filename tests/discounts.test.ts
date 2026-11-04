@@ -92,7 +92,7 @@ test('GET /discounts returns the list for an admin', async () => {
         },
       ],
     }),
-    deleteDiscount: async () => { },
+    deleteDiscount: async () => {},
     createDiscount: async () => {
       throw new Error('not used');
     },
