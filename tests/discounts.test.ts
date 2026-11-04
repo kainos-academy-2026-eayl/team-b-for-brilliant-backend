@@ -8,6 +8,7 @@ import { Prisma } from '../src/generated/prisma/client';
 import { createAuthenticateCustomer } from '../src/middleware/authenticateCustomer';
 import { validateActivateDiscount, validateCreateDiscount } from '../src/schemas/discount';
 import { deactivateDiscount, getDiscounts } from '../src/services/discounts';
+import { requireAdmin } from '../src/middleware/requireAdmin';
 import { createSession } from '../src/services/sessions';
 
 const savedDiscount = {
@@ -56,6 +57,19 @@ test('getDiscounts maps stored discounts to DTOs', async () => {
       },
     ],
   });
+});
+
+<<<<<<<< <Temporary merge branch 1;
+test('GET /discounts returns the list for a logged-in user', async () => {
+=========
+test('deleteDiscount throws 404 when nothing was deleted', async () => {
+  await assert.rejects(
+    deleteDiscount('missing', {
+      findAllDiscounts: async () => [],
+      deleteDiscountByID: async () => ({ count: 0 }),
+    }),
+    (error: unknown) => error instanceof HttpError && error.status === 404,
+  );
 });
 
 test('GET /discounts requires login', async () => {
