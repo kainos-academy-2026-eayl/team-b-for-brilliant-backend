@@ -6,7 +6,6 @@ import { discountServices } from '../src/controllers/discounts';
 import { HttpError } from '../src/errors/httpError';
 import { Prisma } from '../src/generated/prisma/client';
 import { createAuthenticateCustomer } from '../src/middleware/authenticateCustomer';
-import { createRequireAdmin } from '../src/middleware/requireAdmin';
 import { validateCreateDiscount } from '../src/schemas/discount';
 import { deleteDiscount, getDiscounts } from '../src/services/discounts';
 import { createSession } from '../src/services/sessions';
@@ -93,7 +92,7 @@ test('GET /discounts returns the list for an admin', async () => {
         },
       ],
     }),
-    deleteDiscount: async () => {},
+    deleteDiscount: async () => { },
     createDiscount: async () => {
       throw new Error('not used');
     },
