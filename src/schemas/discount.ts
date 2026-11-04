@@ -67,6 +67,7 @@ export const CreateDiscountSchema = z
 
 export type CreateDiscountInput = z.output<typeof CreateDiscountSchema>;
 
+<<<<<<< HEAD
 export const ActivateDiscountSchema = z
   .object({ expiryDate: z.string().trim() })
   .superRefine((input, ctx) => {
@@ -96,6 +97,8 @@ export function validateActivateDiscount(input: unknown) {
   return { success: true as const, expiryDate: result.data };
 }
 
+=======
+>>>>>>> main
 export function validateCreateDiscount(input: unknown) {
   const result = CreateDiscountSchema.safeParse(input);
 

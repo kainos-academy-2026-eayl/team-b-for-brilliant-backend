@@ -7,5 +7,5 @@ export async function registerCustomer(
   create: typeof createCustomer = createCustomer,
 ) {
   const passwordHash = await hashPassword(password); // done even for existing emails so timing looks the same
-  await create(email, passwordHash);
+  return create(email, passwordHash);
 }

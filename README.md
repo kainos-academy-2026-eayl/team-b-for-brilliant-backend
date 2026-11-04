@@ -201,9 +201,11 @@ This is input validation only: it does not save products or add a POST endpoint.
 Passwords are hashed before the account is created. Registration does not send
 email or require an email-verification token.
 
-New and already-registered addresses both receive HTTP 202 with
-`{ "message": "Registration request processed" }` to avoid revealing whether an
-account exists. Invalid input returns HTTP 400; registration failures return
+New accounts receive HTTP 202 with a message, `customerId`, `accessLevel: 0`, and
+an `accessToken` JWT, allowing them to make authenticated requests immediately.
+Already-registered addresses receive HTTP 202 with only
+`{ "message": "Registration request processed" }`; they must sign in through
+`/auth/verify`. Invalid input returns HTTP 400; registration failures return
 HTTP 500. The former verification and resend-verification endpoints are removed.
 
 ### Credential verification
@@ -216,7 +218,7 @@ HTTP 200 with `{ "unique": true }` or `{ "unique": false }`. Clients must read
 the boolean response, not infer uniqueness from the HTTP status.
 
 `POST /auth/verify` accepts an email address and password. Valid credentials return
-HTTP 200 with `{ "customerId": "<userID>", "accessToken": "<token>" }`;
+HTTP 200 with `{ "message": "Login successful", "customerId": "<userID>", "accessToken": "<token>" }`;
 no MFA flag is queried or returned. The access token uses the existing in-memory
 session store, expires after one hour, and is sent as `Authorization: Bearer
 <token>` for authenticated account requests. Tokens are local to the backend
@@ -224,6 +226,14 @@ process and are invalidated by a restart.
 The `customerId` response key is retained for compatibility with the frontend,
 while the account is stored in the `User` table. Incorrect passwords return
 HTTP 401, unknown accounts return HTTP 404, and invalid input returns HTTP 400.
+These failed login responses include both `message` and the existing `error` field
+with matching text:
+
+| HTTP status | `message` and `error` |
+| --- | --- |
+| 400 | `email and password are required` |
+| 401 | `Invalid credentials` |
+| 404 | `Customer not found` |
 
 ### Optional account details
 

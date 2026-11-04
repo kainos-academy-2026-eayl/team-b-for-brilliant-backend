@@ -12,7 +12,7 @@ test('a mixed-case registration can immediately sign in with the submitted email
   let stored: { email: string; passwordHash: string } | undefined;
   const findCustomer = async (email: string) =>
     stored?.email === email
-      ? { customerID: 'customer-1', passwordHash: stored.passwordHash }
+      ? { customerID: 'customer-1', passwordHash: stored.passwordHash, accessLevel: 0 }
       : null;
   const app = express();
   app.use(express.json());
@@ -20,6 +20,7 @@ test('a mixed-case registration can immediately sign in with the submitted email
     '/api/v1/auth',
     createRegistrationRouter(async (email, password) => {
       stored = { email, passwordHash: await hashPassword(password) };
+      return { customerID: 'customer-1' };
     }),
   );
   app.use(

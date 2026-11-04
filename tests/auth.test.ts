@@ -25,9 +25,9 @@ test('valid credentials return the user ID without an MFA flag', async () => {
   const passwordHash = await hashPassword('password123');
   const result = await verifyCredentials(' user@example.com ', 'password123', async (email) => {
     assert.equal(email, 'user@example.com');
-    return { customerID: 'user-1', passwordHash };
+    return { customerID: 'user-1', passwordHash, accessLevel: null };
   });
-  assert.deepEqual(result, { status: 'valid', customerId: 'user-1' });
+  assert.deepEqual(result, { status: 'valid', customerId: 'user-1', accessLevel: 0 });
 });
 
 test('incorrect passwords remain invalid', async () => {
@@ -35,6 +35,7 @@ test('incorrect passwords remain invalid', async () => {
   const result = await verifyCredentials('user@example.com', 'incorrect', async () => ({
     customerID: 'user-1',
     passwordHash,
+    accessLevel: 0,
   }));
   assert.deepEqual(result, { status: 'invalid' });
 });
@@ -56,35 +57,46 @@ test('credential lookup failures propagate', async () => {
   );
 });
 
-test('the credentials endpoint returns customerId and an authenticated access token on success', async () => {
+test('the credentials endpoint returns a success message, customerId and an authenticated access token', async () => {
   const app = authApp(async (email, password) => {
     assert.equal(email, 'user@example.com');
     assert.equal(password, 'password123');
-    return { status: 'valid', customerId: 'user-1' };
+    return { status: 'valid', customerId: 'user-1', accessLevel: 1 };
   });
   const response = await request(app)
     .post('/auth/verify')
     .send({ email: 'user@example.com', password: 'password123' })
     .expect(200);
+  assert.equal(response.body.message, 'Login successful');
   assert.equal(response.body.customerId, 'user-1');
   assert.equal(typeof response.body.accessToken, 'string');
+  const tokenPayload = JSON.parse(
+    Buffer.from(response.body.accessToken.split('.')[1], 'base64url').toString('utf8'),
+  );
+  assert.equal(tokenPayload.accessLevel, 1);
   assert.equal(getCustomerIDForToken(response.body.accessToken), 'user-1');
   assert.equal(response.body.mfaEnabled, undefined);
   endSession(response.body.accessToken);
 });
 
-test('the credentials endpoint preserves invalid and missing account responses', async () => {
+test('the credentials endpoint adds messages while preserving invalid and missing account errors', async () => {
   const invalid = await request(authApp(async () => ({ status: 'invalid' })))
     .post('/auth/verify')
     .send({ email: 'user@example.com', password: 'incorrect' })
     .expect(401);
-  assert.deepEqual(invalid.body, { error: 'Invalid credentials' });
+  assert.deepEqual(invalid.body, {
+    message: 'Invalid credentials',
+    error: 'Invalid credentials',
+  });
 
   const missing = await request(authApp(async () => ({ status: 'not_found' })))
     .post('/auth/verify')
     .send({ email: 'missing@example.com', password: 'password123' })
     .expect(404);
-  assert.deepEqual(missing.body, { error: 'Customer not found' });
+  assert.deepEqual(missing.body, {
+    message: 'Customer not found',
+    error: 'Customer not found',
+  });
 });
 
 test('the credentials endpoint rejects invalid input before lookup', async () => {
@@ -98,7 +110,10 @@ test('the credentials endpoint rejects invalid input before lookup', async () =>
     { email: 'user@example.com', password: '' },
   ]) {
     const response = await request(app).post('/auth/verify').send(body).expect(400);
-    assert.deepEqual(response.body, { error: 'email and password are required' });
+    assert.deepEqual(response.body, {
+      message: 'email and password are required',
+      error: 'email and password are required',
+    });
   }
 });
 
@@ -147,6 +162,7 @@ test('email uniqueness service distinguishes existing and missing accounts', asy
     await uniqueEmail('user@example.com', async () => ({
       customerID: 'user-1',
       passwordHash: 'unused',
+      accessLevel: null,
     })),
     { unique: false },
   );
