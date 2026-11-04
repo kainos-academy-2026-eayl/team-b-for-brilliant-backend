@@ -1,6 +1,48 @@
 # team-b-for-brilliant-backend
 Team B For Brilliant Backend
 
+## Admin product editor API
+
+All `/admin/products` routes require a valid bearer token with admin access
+level 1; customers receive 403 and signed-out callers 401.
+
+- `GET /admin/products?q=...&category=...` lists non-deleted products,
+  including hidden/draft entries, with optional name/category filters.
+- `GET /admin/products/:productID` returns `{ product, currentPrice, categories,
+  departments }`. Classification choices include unassigned categories.
+- `PUT /admin/products/:productID` accepts `{ name, description, quantity,
+  weight, visible, draft, price, categoryIDs, images? }` and returns
+  `{ product, currentPrice }`. Price is a two-decimal string between `"0.00"`
+  and `"99999999.99"`. Description may be null. Categories must exist.
+  Missing/deleted products return 404 and invalid input returns 400.
+
+Publication flags must be complementary: `visible: true, draft: false` means
+published to customers; `visible: false, draft: true` means draft. Both true
+or both false are rejected with HTTP 400. Admin catalogue/detail reads retain
+existing drafts and hidden records so admins can choose a valid publication
+state without making them available to customers.
+
+Optional `images` is an ordered array of up to five entries. Each entry is
+either `{ imageID }` to retain an image belonging to this product, or
+`{ contentType, data }` for a new upload, where `data` is base64 and
+`contentType` is PNG, JPEG, GIF or WebP. Existing references and new uploads
+can be interleaved. New decoded files must total at most 5 MB and match their
+file signatures; SVG uploads are not accepted. Existing image IDs must be
+unique and belong to this product.
+
+Omit `images` to leave images unchanged. An explicit array removes images
+not listed, retains the IDs of existing images, and stores sequential
+`imageOrder` values matching the array. An empty array removes all images.
+The first entry is the main image and catalogue thumbnail.
+
+Details, category links, changed price history and image records commit in
+one database transaction. Failed saves remove newly written files.
+Uploads use server-generated filenames in `public/images` (gitignored).
+Mount that directory on persistent storage when deploying. Previously
+published files are retained to avoid breaking cached image URLs; reclaiming
+unreferenced uploads is a separate maintenance operation. No migration is
+needed: the existing product, category, price and image tables are reused.
+
 ## Local database and Prisma
 
 Prisma lets the backend query Postgres through a typed TypeScript client.
