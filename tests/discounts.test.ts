@@ -7,6 +7,7 @@ import { HttpError } from '../src/errors/httpError';
 import { Prisma } from '../src/generated/prisma/client';
 import { createAuthenticateCustomer } from '../src/middleware/authenticateCustomer';
 import { requireAdmin } from '../src/middleware/requireAdmin';
+import { validateCreateDiscount } from '../src/schemas/discount';
 import { deleteDiscount, getDiscounts } from '../src/services/discounts';
 import { createSession } from '../src/services/sessions';
 
@@ -35,6 +36,7 @@ test('getDiscounts maps stored discounts to DTOs', async () => {
   const result = await getDiscounts({
     findAllDiscounts: async () => [savedDiscount],
     deleteDiscountByID: async () => ({ count: 0 }),
+    createDiscountRecord: async () => null,
   });
 
   assert.deepEqual(result, {
@@ -55,6 +57,7 @@ test('deleteDiscount throws 404 when nothing was deleted', async () => {
     deleteDiscount('missing', {
       findAllDiscounts: async () => [],
       deleteDiscountByID: async () => ({ count: 0 }),
+      createDiscountRecord: async () => null,
     }),
     (error: unknown) => error instanceof HttpError && error.status === 404,
   );
@@ -91,6 +94,9 @@ test('GET /discounts returns the list for an admin', async () => {
       ],
     }),
     deleteDiscount: async () => {},
+    createDiscount: async () => {
+      throw new Error('not used');
+    },
   });
   const token = createSession('admin-1', Date.now(), 1);
   const response = await request(app)
@@ -111,6 +117,9 @@ test('DELETE /discounts/:discountID returns 204, 404 and refuses non-admins', as
         throw new HttpError(404, 'Discount not found');
       }
     },
+    createDiscount: async () => {
+      throw new Error('not used');
+    },
   });
   const adminToken = createSession('admin-1', Date.now(), 1);
   const customerToken = createSession('customer-1');
@@ -127,4 +136,68 @@ test('DELETE /discounts/:discountID returns 204, 404 and refuses non-admins', as
     .delete('/discounts/discount-1')
     .set('Authorization', `Bearer ${customerToken}`)
     .expect(403);
+});
+
+const futureDate = '2999-12-31';
+const validPercentage = {
+  code: 'SUMMER10',
+  type: 'PERCENTAGE',
+  value: '10',
+  expiryDate: futureDate,
+};
+
+test('validateCreateDiscount accepts valid percentage and amount discounts', () => {
+  const percentage = validateCreateDiscount(validPercentage);
+  const amount = validateCreateDiscount({ ...validPercentage, type: 'AMOUNT_OFF', value: '5.50' });
+
+  assert.equal(percentage.success, true);
+  assert.equal(amount.success, true);
+  if (percentage.success) {
+    assert.equal(percentage.data.expiryDate.toISOString(), '2999-12-31T00:00:00.000Z');
+  }
+});
+
+test('validateCreateDiscount rejects blank fields', () => {
+  const result = validateCreateDiscount({ code: '', type: '', value: '', expiryDate: '' });
+
+  assert.equal(result.success, false);
+  if (!result.success) {
+    assert.deepEqual(Object.keys(result.errors.fieldErrors).sort(), ['code', 'type']);
+  }
+});
+
+test('validateCreateDiscount enforces value rules per discount type', () => {
+  const invalid = [
+    { type: 'PERCENTAGE', value: '101' },
+    { type: 'PERCENTAGE', value: '10.5' },
+    { type: 'PERCENTAGE', value: '-1' },
+    { type: 'PERCENTAGE', value: '' },
+    { type: 'AMOUNT_OFF', value: '0' },
+    { type: 'AMOUNT_OFF', value: '-5' },
+    { type: 'AMOUNT_OFF', value: '5.123' },
+    { type: 'AMOUNT_OFF', value: 'abc' },
+  ];
+
+  for (const overrides of invalid) {
+    const result = validateCreateDiscount({ ...validPercentage, ...overrides });
+    assert.equal(result.success, false, JSON.stringify(overrides));
+  }
+  assert.equal(validateCreateDiscount({ ...validPercentage, value: '0' }).success, true);
+  assert.equal(validateCreateDiscount({ ...validPercentage, value: '100' }).success, true);
+});
+
+test('validateCreateDiscount rejects bad codes and expiry dates', () => {
+  for (const overrides of [
+    { code: 'ab' },
+    { code: 'has space' },
+    { expiryDate: '2000-01-01' },
+    { expiryDate: '2999-02-30' },
+    { expiryDate: '31/12/2999' },
+  ]) {
+    assert.equal(
+      validateCreateDiscount({ ...validPercentage, ...overrides }).success,
+      false,
+      JSON.stringify(overrides),
+    );
+  }
 });

@@ -58,7 +58,10 @@ export function createAuthRouter(
   router.post('/verify', async (req: Request, res: Response) => {
     const body = verifyBodySchema.safeParse(req.body);
     if (!body.success) {
-      res.status(400).json({ error: 'email and password are required' });
+      res.status(400).json({
+        message: 'email and password are required',
+        error: 'email and password are required',
+      });
       return;
     }
 
@@ -66,13 +69,20 @@ export function createAuthRouter(
 
     switch (result.status) {
       case 'not_found':
-        res.status(404).json({ error: 'Customer not found' });
+        res.status(404).json({
+          message: 'Customer not found',
+          error: 'Customer not found',
+        });
         return;
       case 'invalid':
-        res.status(401).json({ error: 'Invalid credentials' });
+        res.status(401).json({
+          message: 'Invalid credentials',
+          error: 'Invalid credentials',
+        });
         return;
       case 'valid':
         res.json({
+          message: 'Login successful',
           customerId: result.customerId,
           accessLevel: result.accessLevel,
           accessToken: createSession(result.customerId, Date.now(), result.accessLevel),

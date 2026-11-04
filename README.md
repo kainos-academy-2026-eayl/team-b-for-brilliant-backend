@@ -260,50 +260,22 @@ HTTP 200 with `{ "unique": true }` or `{ "unique": false }`. Clients must read
 the boolean response, not infer uniqueness from the HTTP status.
 
 `POST /auth/verify` accepts an email address and password. Valid credentials return
-HTTP 200 with `customerId`, `accessLevel`, and a signed JWT `accessToken`; no MFA
-flag is queried or returned. JWTs expire after one day and should be sent as
-`Authorization: Bearer <token>` on authenticated requests. The `customerId`
-response key is retained for compatibility with the frontend. Incorrect
-passwords return HTTP 401, unknown accounts return HTTP 404, and invalid input
-returns HTTP 400.
+HTTP 200 with `{ "message": "Login successful", "customerId": "<userID>", "accessToken": "<token>" }`;
+no MFA flag is queried or returned. The access token uses the existing in-memory
+session store, expires after one hour, and is sent as `Authorization: Bearer
+<token>` for authenticated account requests. Tokens are local to the backend
+process and are invalidated by a restart.
+The `customerId` response key is retained for compatibility with the frontend,
+while the account is stored in the `User` table. Incorrect passwords return
+HTTP 401, unknown accounts return HTTP 404, and invalid input returns HTTP 400.
+These failed login responses include both `message` and the existing `error` field
+with matching text:
 
-JWTs are signed with HS256 using `JWT_SECRET`, which must be a random value of at
-least 32 bytes. Set it in `.env` for local development and in deployment secrets
-for hosted environments. Do not commit the secret. Changing it invalidates all
-previously issued tokens. JWT payloads are signed, not encrypted; do not put
-passwords or sensitive personal data in them.
-
-The token's `accessLevel` comes from the user's related `Role` row:
-
-- `0` is customer access. A user with `roleID: null` is treated as level `0`.
-- `1` is admin access.
-- Other values are treated as customer access.
-
-Registration does not accept a role from the request. New registrations currently
-have no role ID and receive a level-0 customer token. Existing role assignments
-are used at sign-in. `src/middleware/requireAdmin.ts` can protect admin routes;
-there are currently no admin routes wired into the app. A role change will not
-change already-issued claims: an admin token may retain admin access until its
-one-day expiry. The existing `endSession` helper revokes tokens only in the
-current process; it is not a persistent logout mechanism.
-
-`GET /auth/session` validates a bearer JWT (signature, issuer, audience,
-expiration and revocation) and returns `{ "customerId": "...", "accessLevel": 0 }`
-or HTTP 401. The frontend uses this endpoint instead of sharing the signing
-secret or trusting unverified JWT payloads.
-
-`POST /auth/logout` revokes a supplied valid bearer JWT using `endSession` and
-returns HTTP 204. Repeated logout and invalid tokens also return 204. A retained
-copy of a revoked token is rejected by `/auth/session` and other protected
-endpoints in that process. The blocklist remains process-local; use shared,
-persistent revocation storage for a multi-instance production deployment.
-Authentication and registration responses use `Cache-Control: no-store`.
-
-Generate a local secret with:
-
-```sh
-node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
-```
+| HTTP status | `message` and `error` |
+| --- | --- |
+| 400 | `email and password are required` |
+| 401 | `Invalid credentials` |
+| 404 | `Customer not found` |
 
 ### Optional account details
 
