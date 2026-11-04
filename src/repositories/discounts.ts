@@ -34,17 +34,3 @@ export async function createDiscountRecord(input: CreateDiscountInput) {
     throw error;
   }
 }
-
-// Returns null when the code already exists (also covers two simultaneous requests)
-export async function createDiscountRecord(input: CreateDiscountInput) {
-  const { prisma } = await import('../prismaClient');
-
-  try {
-    return await prisma.discounts.create({ data: input });
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-      return null;
-    }
-    throw error;
-  }
-}

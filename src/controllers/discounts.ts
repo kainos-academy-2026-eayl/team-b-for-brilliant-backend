@@ -1,6 +1,6 @@
-import { type Request, type Response, Router } from 'express';
+import { type Request, type RequestHandler, type Response, Router } from 'express';
 import { sendErrorResponse } from '../errors/httpError';
-<<<<<<< HEAD
+import { requireAdmin } from '../middleware/requireAdmin';
 import {
   type CreateDiscountInput,
   validateActivateDiscount,
@@ -19,20 +19,15 @@ export const discountServices = {
   deactivateDiscount: (discountID: string) => deactivateDiscount(discountID),
   activateDiscount: (discountID: string, expiryDate: Date) =>
     setDiscountExpiry(discountID, expiryDate),
-=======
-import { requireAdmin } from '../middleware/requireAdmin';
-import { type CreateDiscountInput, validateCreateDiscount } from '../schemas/discount';
-import { createDiscount, deleteDiscount, getDiscounts } from '../services/discounts';
-
-export const discountServices = {
-  getDiscounts: () => getDiscounts(),
-  deleteDiscount: (discountID: string) => deleteDiscount(discountID),
-  createDiscount: (input: CreateDiscountInput) => createDiscount(input),
->>>>>>> main
 };
 
-export function createDiscountsRouter(services = discountServices): Router {
+export function createDiscountsRouter(
+  services = discountServices,
+  adminOnly: RequestHandler = requireAdmin,
+): Router {
   const router = Router();
+
+  router.use(adminOnly);
 
   router.get('/', async (_req: Request, res: Response) => {
     res.json(await services.getDiscounts());
@@ -46,17 +41,6 @@ export function createDiscountsRouter(services = discountServices): Router {
       return;
     }
 
-<<<<<<< HEAD
-=======
-    try {
-      res.status(201).json(await services.createDiscount(input.data));
-    } catch (error) {
-      sendErrorResponse(error, res);
-    }
-  });
-
-  router.delete('/:discountID', async (req: Request<{ discountID: string }>, res: Response) => {
->>>>>>> main
     try {
       res.status(201).json(await services.createDiscount(input.data));
     } catch (error) {

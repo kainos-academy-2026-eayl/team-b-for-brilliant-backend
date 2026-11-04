@@ -6,14 +6,8 @@ import { discountServices } from '../src/controllers/discounts';
 import { HttpError } from '../src/errors/httpError';
 import { Prisma } from '../src/generated/prisma/client';
 import { createAuthenticateCustomer } from '../src/middleware/authenticateCustomer';
-<<<<<<< HEAD
 import { validateActivateDiscount, validateCreateDiscount } from '../src/schemas/discount';
 import { deactivateDiscount, getDiscounts } from '../src/services/discounts';
-=======
-import { requireAdmin } from '../src/middleware/requireAdmin';
-import { validateCreateDiscount } from '../src/schemas/discount';
-import { deleteDiscount, getDiscounts } from '../src/services/discounts';
->>>>>>> main
 import { createSession } from '../src/services/sessions';
 
 const savedDiscount = {
@@ -25,7 +19,6 @@ const savedDiscount = {
   expiryDate: new Date('2026-12-31T00:00:00.000Z'),
 };
 
-<<<<<<< HEAD
 const savedDto = {
   discountID: 'discount-1',
   code: 'SUMMER10',
@@ -34,8 +27,6 @@ const savedDto = {
   expiryDate: '2026-12-31T00:00:00.000Z',
 };
 
-=======
->>>>>>> main
 function createTestApp(services = discountServices) {
   return createApp(
     undefined,
@@ -50,13 +41,8 @@ function createTestApp(services = discountServices) {
 test('getDiscounts maps stored discounts to DTOs', async () => {
   const result = await getDiscounts({
     findAllDiscounts: async () => [savedDiscount],
-<<<<<<< HEAD
     createDiscountRecord: async () => null,
     updateDiscountExpiry: async () => null,
-=======
-    deleteDiscountByID: async () => ({ count: 0 }),
-    createDiscountRecord: async () => null,
->>>>>>> main
   });
 
   assert.deepEqual(result, {
@@ -70,20 +56,6 @@ test('getDiscounts maps stored discounts to DTOs', async () => {
       },
     ],
   });
-});
-
-<<<<<<< HEAD
-test('GET /discounts returns the list for a logged-in user', async () => {
-=======
-test('deleteDiscount throws 404 when nothing was deleted', async () => {
-  await assert.rejects(
-    deleteDiscount('missing', {
-      findAllDiscounts: async () => [],
-      deleteDiscountByID: async () => ({ count: 0 }),
-      createDiscountRecord: async () => null,
-    }),
-    (error: unknown) => error instanceof HttpError && error.status === 404,
-  );
 });
 
 test('GET /discounts requires login', async () => {
@@ -104,7 +76,6 @@ test('GET /discounts rejects users with no role', async () => {
 });
 
 test('GET /discounts returns the list for an admin', async () => {
->>>>>>> main
   const app = createTestApp({
     getDiscounts: async () => ({
       discounts: [
@@ -117,7 +88,6 @@ test('GET /discounts returns the list for an admin', async () => {
         },
       ],
     }),
-<<<<<<< HEAD
     createDiscount: async () => {
       throw new Error('not used');
     },
@@ -128,15 +98,7 @@ test('GET /discounts returns the list for an admin', async () => {
       throw new Error('not used');
     },
   });
-  const token = createSession('customer-1');
-=======
-    deleteDiscount: async () => {},
-    createDiscount: async () => {
-      throw new Error('not used');
-    },
-  });
   const token = createSession('admin-1', Date.now(), 1);
->>>>>>> main
   const response = await request(app)
     .get('/discounts')
     .set('Authorization', `Bearer ${token}`)
@@ -147,7 +109,6 @@ test('GET /discounts returns the list for an admin', async () => {
   assert.equal(response.body.discounts[0].value, '10.00');
 });
 
-<<<<<<< HEAD
 const futureDate = '2999-12-31';
 const validPercentage = {
   code: 'SUMMER10',
@@ -247,10 +208,7 @@ test('validateActivateDiscount requires a valid, non-past date', () => {
   }
 });
 
-test('POST /discounts/:id/deactivate and /activate work for logged-in users', async () => {
-=======
-test('DELETE /discounts/:discountID returns 204, 404 and refuses non-admins', async () => {
->>>>>>> main
+test('POST /discounts/:id/deactivate and /activate work for admins and refuse non-admins', async () => {
   const app = createTestApp({
     getDiscounts: async () => ({ discounts: [] }),
     createDiscount: async () => {
@@ -262,22 +220,18 @@ test('DELETE /discounts/:discountID returns 204, 404 and refuses non-admins', as
       }
       return { ...savedDto, expiryDate: '2026-11-03T00:00:00.000Z' };
     },
-<<<<<<< HEAD
     activateDiscount: async (_id, expiryDate) => ({
       ...savedDto,
       expiryDate: expiryDate.toISOString(),
     }),
   });
-  const token = createSession('customer-1');
-=======
-    createDiscount: async () => {
-      throw new Error('not used');
-    },
-  });
-  const adminToken = createSession('admin-1', Date.now(), 1);
+  const token = createSession('admin-1', Date.now(), 1);
   const customerToken = createSession('customer-1');
->>>>>>> main
 
+  await request(app)
+    .post('/discounts/discount-1/deactivate')
+    .set('Authorization', `Bearer ${customerToken}`)
+    .expect(403);
   const deactivated = await request(app)
     .post('/discounts/discount-1/deactivate')
     .set('Authorization', `Bearer ${token}`)
@@ -299,68 +253,4 @@ test('DELETE /discounts/:discountID returns 204, 404 and refuses non-admins', as
     .set('Authorization', `Bearer ${token}`)
     .send({ expiryDate: '2000-01-01' })
     .expect(400);
-});
-
-const futureDate = '2999-12-31';
-const validPercentage = {
-  code: 'SUMMER10',
-  type: 'PERCENTAGE',
-  value: '10',
-  expiryDate: futureDate,
-};
-
-test('validateCreateDiscount accepts valid percentage and amount discounts', () => {
-  const percentage = validateCreateDiscount(validPercentage);
-  const amount = validateCreateDiscount({ ...validPercentage, type: 'AMOUNT_OFF', value: '5.50' });
-
-  assert.equal(percentage.success, true);
-  assert.equal(amount.success, true);
-  if (percentage.success) {
-    assert.equal(percentage.data.expiryDate.toISOString(), '2999-12-31T00:00:00.000Z');
-  }
-});
-
-test('validateCreateDiscount rejects blank fields', () => {
-  const result = validateCreateDiscount({ code: '', type: '', value: '', expiryDate: '' });
-
-  assert.equal(result.success, false);
-  if (!result.success) {
-    assert.deepEqual(Object.keys(result.errors.fieldErrors).sort(), ['code', 'type']);
-  }
-});
-
-test('validateCreateDiscount enforces value rules per discount type', () => {
-  const invalid = [
-    { type: 'PERCENTAGE', value: '101' },
-    { type: 'PERCENTAGE', value: '10.5' },
-    { type: 'PERCENTAGE', value: '-1' },
-    { type: 'PERCENTAGE', value: '' },
-    { type: 'AMOUNT_OFF', value: '0' },
-    { type: 'AMOUNT_OFF', value: '-5' },
-    { type: 'AMOUNT_OFF', value: '5.123' },
-    { type: 'AMOUNT_OFF', value: 'abc' },
-  ];
-
-  for (const overrides of invalid) {
-    const result = validateCreateDiscount({ ...validPercentage, ...overrides });
-    assert.equal(result.success, false, JSON.stringify(overrides));
-  }
-  assert.equal(validateCreateDiscount({ ...validPercentage, value: '0' }).success, true);
-  assert.equal(validateCreateDiscount({ ...validPercentage, value: '100' }).success, true);
-});
-
-test('validateCreateDiscount rejects bad codes and expiry dates', () => {
-  for (const overrides of [
-    { code: 'ab' },
-    { code: 'has space' },
-    { expiryDate: '2000-01-01' },
-    { expiryDate: '2999-02-30' },
-    { expiryDate: '31/12/2999' },
-  ]) {
-    assert.equal(
-      validateCreateDiscount({ ...validPercentage, ...overrides }).success,
-      false,
-      JSON.stringify(overrides),
-    );
-  }
 });
