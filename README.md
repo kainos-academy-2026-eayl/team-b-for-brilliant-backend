@@ -201,10 +201,15 @@ This is input validation only: it does not save products or add a POST endpoint.
 Passwords are hashed before the account is created. Registration does not send
 email or require an email-verification token.
 
-New and already-registered addresses both receive HTTP 202 with
-`{ "message": "Registration request processed" }` to avoid revealing whether an
-account exists. Invalid input returns HTTP 400; registration failures return
+New addresses receive HTTP 202 with
+`{ "message": "Registration request processed" }`. Already-registered addresses
+receive HTTP 400 with `{ "message": "Email already in use", "error": "Email already in use" }`,
+including duplicate submissions from simultaneous sign-ups. This response reveals
+whether an account exists. Invalid input returns HTTP 400; registration failures return
 HTTP 500. The former verification and resend-verification endpoints are removed.
+Invalid input responses include `"message": "Invalid details"`, the matching
+`error` field, and validation `details`. Registration failures include
+`"message": "Something went wrong"` and the matching `error` field.
 
 ### Credential verification
 
