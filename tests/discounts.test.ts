@@ -20,16 +20,7 @@ const savedDiscount = {
   expiryDate: new Date('2026-12-31T00:00:00.000Z'),
 };
 
-function createTestApp(roleName: string | null, services = discountServices) {
-  const roles = new Map([
-    ['admin-1', 'admin'],
-    ['customer-1', roleName ?? ''],
-  ]);
-  const requireAdmin = createRequireAdmin(async (userID) => {
-    const name = roles.get(userID);
-    return name ? name : null;
-  });
-
+function createTestApp(services = discountServices) {
   return createApp(
     undefined,
     undefined,
@@ -73,24 +64,24 @@ test('deleteDiscount throws 404 when nothing was deleted', async () => {
 });
 
 test('GET /discounts requires login', async () => {
-  const app = createTestApp('admin');
+  const app = createTestApp();
   await request(app).get('/discounts').expect(401);
 });
 
 test('GET /discounts rejects users who are not admins', async () => {
-  const app = createTestApp('customer');
+  const app = createTestApp();
   const token = createSession('customer-1');
   await request(app).get('/discounts').set('Authorization', `Bearer ${token}`).expect(403);
 });
 
 test('GET /discounts rejects users with no role', async () => {
-  const app = createTestApp(null);
+  const app = createTestApp();
   const token = createSession('customer-1');
   await request(app).get('/discounts').set('Authorization', `Bearer ${token}`).expect(403);
 });
 
 test('GET /discounts returns the list for an admin', async () => {
-  const app = createTestApp('customer', {
+  const app = createTestApp({
     getDiscounts: async () => ({
       discounts: [
         {
@@ -107,7 +98,7 @@ test('GET /discounts returns the list for an admin', async () => {
       throw new Error('not used');
     },
   });
-  const token = createSession('admin-1');
+  const token = createSession('admin-1', Date.now(), 1);
   const response = await request(app)
     .get('/discounts')
     .set('Authorization', `Bearer ${token}`)
@@ -119,7 +110,7 @@ test('GET /discounts returns the list for an admin', async () => {
 });
 
 test('DELETE /discounts/:discountID returns 204, 404 and refuses non-admins', async () => {
-  const app = createTestApp('customer', {
+  const app = createTestApp({
     getDiscounts: async () => ({ discounts: [] }),
     deleteDiscount: async (discountID) => {
       if (discountID !== 'discount-1') {
@@ -130,7 +121,7 @@ test('DELETE /discounts/:discountID returns 204, 404 and refuses non-admins', as
       throw new Error('not used');
     },
   });
-  const adminToken = createSession('admin-1');
+  const adminToken = createSession('admin-1', Date.now(), 1);
   const customerToken = createSession('customer-1');
 
   await request(app)

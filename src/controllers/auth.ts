@@ -6,7 +6,7 @@ import {
   type VerifyCredentialsResult,
   verifyCredentials,
 } from '../services/auth';
-import { createSession } from '../services/sessions';
+import { createSession, endSession, getAuthenticatedUserForToken } from '../services/sessions';
 
 const verifyBodySchema = z.object({
   email: z.string().min(1),
@@ -30,6 +30,30 @@ export function createAuthRouter(
 ): Router {
   const router = Router();
   router.use(json());
+  router.use((_req, res, next) => {
+    res.set('Cache-Control', 'no-store');
+    next();
+  });
+
+  router.get('/session', (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    const header = req.header('authorization') ?? '';
+    const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
+    const user = token ? getAuthenticatedUserForToken(token) : null;
+    if (!user) {
+      res.status(401).json({ error: 'Login required' });
+      return;
+    }
+    res.json({ customerId: user.customerID, accessLevel: user.accessLevel });
+  });
+
+  router.post('/logout', (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    const header = req.header('authorization') ?? '';
+    const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
+    if (token) endSession(token);
+    res.status(204).end();
+  });
 
   router.post('/verify', async (req: Request, res: Response) => {
     const body = verifyBodySchema.safeParse(req.body);
@@ -50,7 +74,8 @@ export function createAuthRouter(
       case 'valid':
         res.json({
           customerId: result.customerId,
-          accessToken: createSession(result.customerId),
+          accessLevel: result.accessLevel,
+          accessToken: createSession(result.customerId, Date.now(), result.accessLevel),
         });
     }
   });
