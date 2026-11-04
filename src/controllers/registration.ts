@@ -3,9 +3,14 @@ import * as z from 'zod';
 import { HttpError } from '../errors/httpError';
 import { registerSchema } from '../schemas/registration';
 import { registerCustomer } from '../services/registration';
+import { createSession } from '../services/sessions';
 
 export function createRegistrationRouter(register: typeof registerCustomer = registerCustomer) {
   const router = Router();
+  router.use((_req, res, next) => {
+    res.set('Cache-Control', 'no-store');
+    next();
+  });
   router.post('/register', async (req: Request, res: Response) => {
     const input = registerSchema.safeParse(req.body);
     if (!input.success) {
@@ -17,8 +22,13 @@ export function createRegistrationRouter(register: typeof registerCustomer = reg
       return;
     }
     try {
-      await register(input.data.email, input.data.password);
-      res.status(202).json({ message: 'Registration request processed' });
+      const customer = await register(input.data.email, input.data.password);
+      res.status(202).json({
+        message: 'Registration request processed',
+        customerId: customer.customerID,
+        accessLevel: 0,
+        accessToken: createSession(customer.customerID),
+      });
     } catch (error) {
       if (error instanceof HttpError) {
         res.status(error.status).json({

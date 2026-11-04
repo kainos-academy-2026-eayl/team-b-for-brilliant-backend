@@ -5,6 +5,7 @@ import request from 'supertest';
 import { createRegistrationRouter } from '../src/controllers/registration';
 import { HttpError } from '../src/errors/httpError';
 import { registerCustomer } from '../src/services/registration';
+import { getCustomerIDForToken } from '../src/services/sessions';
 
 function registrationApp(register: typeof registerCustomer) {
   const app = express();
@@ -42,6 +43,14 @@ test('duplicate registration returns a message and error after email normalizati
   assert.equal(log.mock.callCount(), 0);
 });
 
+test('registration returns the newly created customer ID', async () => {
+  const result = await registerCustomer('new@example.com', 'password123', async (_email, hash) => {
+    assert.notEqual(hash, 'password123');
+    return { customerID: 'new-user' };
+  });
+  assert.deepEqual(result, { customerID: 'new-user' });
+});
+
 test('registration propagates storage failures', async () => {
   const error = new Error('Storage unavailable');
   await assert.rejects(
@@ -56,12 +65,30 @@ test('registration normalizes email and returns a response without email instruc
   const app = registrationApp(async (email, password) => {
     assert.equal(email, 'new@example.com');
     assert.equal(password, 'password123');
+    return { customerID: 'new-user' };
   });
   const response = await request(app)
     .post('/api/v1/auth/register')
     .send({ email: ' New@Example.com ', password: 'password123' })
     .expect(202);
-  assert.deepEqual(response.body, { message: 'Registration request processed' });
+  assert.equal(response.body.message, 'Registration request processed');
+  assert.equal(response.body.customerId, 'new-user');
+  assert.equal(response.body.accessLevel, 0);
+  assert.equal(await getCustomerIDForToken(response.body.accessToken), 'new-user');
+});
+
+test('duplicate registration does not issue a JWT', async () => {
+  const app = registrationApp((email, password) =>
+    registerCustomer(email, password, async () => null),
+  );
+  const response = await request(app)
+    .post('/api/v1/auth/register')
+    .send({ email: 'existing@example.com', password: 'password123' })
+    .expect(400);
+  assert.deepEqual(response.body, {
+    message: 'Email already in use',
+    error: 'Email already in use',
+  });
 });
 
 test('invalid registration input is rejected before creating an account', async () => {
@@ -88,7 +115,9 @@ test('invalid registration input is rejected before creating an account', async 
 });
 
 test('removed verification endpoints return 404', async () => {
-  const app = registrationApp(async () => {});
+  const app = registrationApp(async () => {
+    assert.fail('Registration must not run for removed endpoints');
+  });
   await request(app).post('/api/v1/auth/verify-email').send({ token: 'unused' }).expect(404);
   await request(app)
     .post('/api/v1/auth/resend-verification')

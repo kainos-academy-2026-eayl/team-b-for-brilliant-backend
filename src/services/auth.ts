@@ -2,7 +2,7 @@ import { findCustomerByEmail } from '../models/customers';
 import { comparePasswords } from './password';
 
 export type VerifyCredentialsResult =
-  | { status: 'valid'; customerId: string }
+  | { status: 'valid'; customerId: string; accessLevel: 0 | 1 }
   | { status: 'invalid' }
   | { status: 'not_found' };
 
@@ -18,7 +18,11 @@ export async function verifyCredentials(
 
   if (!(await comparePasswords(password, customer.passwordHash))) return { status: 'invalid' };
 
-  return { status: 'valid', customerId: customer.customerID };
+  return {
+    status: 'valid',
+    customerId: customer.customerID,
+    accessLevel: customer.accessLevel === 1 ? 1 : 0,
+  };
 }
 
 export async function uniqueEmail(
