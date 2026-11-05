@@ -1,6 +1,6 @@
 export interface CustomerCredentials {
   customerID: string;
-  passwordHash: string;
+  passwordHash: string | null;
   accessLevel: number | null;
 }
 

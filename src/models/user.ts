@@ -1,11 +1,11 @@
 export interface userCredentials {
   userID: string;
-  passwordHash: string;
+  passwordHash: string | null;
 }
 
 export interface userDetails {
   userID: string;
-  email: string;
+  email: string | null;
   firstname: string | null;
   surname: string | null;
   addressLine1: string | null;

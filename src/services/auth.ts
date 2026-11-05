@@ -14,7 +14,8 @@ export async function verifyCredentials(
   findCustomer: typeof findCustomerByEmail = findCustomerByEmail,
 ): Promise<VerifyCredentialsResult> {
   const customer = await findCustomer(email.trim().toLowerCase());
-  if (customer === null) return { status: 'not_found' };
+  // A deleted account has no password hash, so it can never be signed in to
+  if (customer === null || customer.passwordHash === null) return { status: 'not_found' };
 
   if (!(await comparePasswords(password, customer.passwordHash))) return { status: 'invalid' };
 
