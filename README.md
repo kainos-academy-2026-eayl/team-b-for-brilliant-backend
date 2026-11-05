@@ -93,6 +93,42 @@ Each image includes `imageID`, `productID`, `imageUrl`, and its integer
 stored order value so clients can sort images and select order 0 as the main image.
 An empty database returns `{ "products": [] }`.
 
+#### Create products
+
+`POST /products` requires a valid bearer token with admin access (`accessLevel: 1`).
+Send JSON containing `name` (nonblank), `quantity` (an integer from 0 to
+2,147,483,647) and `weight` (a finite nonnegative number). `description` is optional
+and may be null; `draft` is optional and defaults to `true`. Visibility is derived
+when saving: draft products have `visible: false`, and non-drafts have
+`visible: true`. Submitted `visible` values are ignored, including legacy JSON
+and multipart fields. Existing products are not changed by this creation rule.
+Generated IDs, sales counts, categories and client-provided image
+URLs cannot be set through this endpoint. An optional `price` decimal string
+(0 to 99,999,999.99, at most two decimal places) creates the initial price record
+without floating-point conversion. Price remains optional for existing JSON API
+clients, but is required by the admin creation form.
+
+The endpoint also accepts `multipart/form-data`: quantity and weight are decimal
+text, `draft` is `"true"` or `"false"`, and `price` uses the same decimal string.
+Attach up to five files under `images`, each at most 5 MiB. Only static JPEG, PNG
+and WebP images up to 40 megapixels are accepted. Images are fully decoded and
+normalized to WebP; filenames are server-generated and multipart upload order
+becomes `imageOrder` (starting at 0). The frontend sends files in the admin's
+chosen preview-list order. Client filenames and image URLs are never stored.
+
+Nested Prisma writes save the product, initial price and image records atomically.
+Validation failures create nothing, and persistence failures remove any newly
+written files. Uploaded files live in `PRODUCT_IMAGE_DIR` (default
+`public/product-images`, excluded from git), served under `/images`. Configure a
+durable volume for this directory in deployments; original seeded images remain
+served from `public/images`. No migration is required.
+
+The endpoint persists a new product and returns HTTP 201 with `{ "product": ... }`
+and a `Location` header pointing to `/products/:productID`. Invalid input returns
+400 with field errors; missing or non-admin authentication returns 401 or 403.
+Database failures return a server error, never a successful creation response.
+No database migration is needed for this endpoint.
+
 #### Search products
 
 `GET /products?search=mug` searches product names using case-insensitive partial

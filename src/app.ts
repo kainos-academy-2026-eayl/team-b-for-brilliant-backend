@@ -14,7 +14,8 @@ import { registrationRouter } from './controllers/registration';
 import type { ProductDto } from './dtos/product';
 import { authenticateCustomer } from './middleware/authenticateCustomer';
 import { requireAdmin } from './middleware/requireAdmin';
-import { getProduct, getProducts } from './services/products';
+import { createProduct, getProduct, getProducts } from './services/products';
+import { getProductImageDirectory } from './services/productImages';
 
 export function createApp(
   fetchProducts: () => Promise<ProductDto[]> = getProducts,
@@ -24,6 +25,7 @@ export function createApp(
   authenticate: RequestHandler = authenticateCustomer,
   discounts = discountServices,
   adminOnly: RequestHandler = requireAdmin,
+  saveProduct: typeof createProduct = createProduct,
 ): Express {
   const app = express();
 
@@ -43,6 +45,7 @@ export function createApp(
   app.use(express.json());
   app.use(cors({ origin: process.env.FRONTEND_URL ?? 'http://localhost:8000' }));
   app.use('/api/v1/auth', registrationRouter);
+  app.use('/images', express.static(getProductImageDirectory(), { index: false }));
   app.use('/images', express.static(resolve('public/images'), { index: false }));
 
   app.get('/health', (_req: Request, res: Response) => {
@@ -52,7 +55,8 @@ export function createApp(
   app.use('/auth', createAuthRouter(auth));
   app.use('/account', authenticate, createAccountDetailsRouter());
   app.use('/bookings', bookingsRouter);
-  app.use('/products', createProductsRouter(fetchProducts, prices, fetchProduct));
+  app.post('/products', authenticate, adminOnly);
+  app.use('/products', createProductsRouter(fetchProducts, prices, fetchProduct, undefined, saveProduct));
   app.use('/basket', authenticate, basketRouter);
   app.use('/checkout', authenticate, checkoutRouter);
   app.use('/profile', authenticate, profileRouter);

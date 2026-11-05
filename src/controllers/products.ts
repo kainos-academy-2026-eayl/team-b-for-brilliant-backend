@@ -1,8 +1,10 @@
 import { type Request, type Response, Router } from 'express';
 import type { ProductDto, ProductResponseDto, ProductsResponseDto } from '../dtos/product';
-import { ProductSearchSchema } from '../schemas/product';
+import { HttpError, sendErrorResponse } from '../errors/httpError';
+import { parseProductUpload } from '../middleware/productUpload';
+import { ProductSearchSchema, validateCreateProduct } from '../schemas/product';
 import { getCurrentProductPrice, getProductPrices } from '../services/productPrices';
-import { getProduct, getProductsByName } from '../services/products';
+import { createProduct, getProduct, getProductsByName } from '../services/products';
 
 export const productPriceServices = {
   getProductPrices: (productID: string) => getProductPrices(productID),
@@ -14,8 +16,28 @@ export function createProductsRouter(
   prices = productPriceServices,
   fetchProduct: (productID: string) => Promise<ProductDto | null> = getProduct,
   searchProducts: (name: string) => Promise<ProductDto[]> = getProductsByName,
+  saveProduct: typeof createProduct = createProduct,
 ): Router {
   const router = Router();
+
+  router.post('/', parseProductUpload, async (req, res) => {
+    const input = validateCreateProduct(req.body, Boolean(req.is('multipart/form-data')));
+    if (!input.success) {
+      res.status(400).json({ error: 'Invalid product', details: input.errors });
+      return;
+    }
+
+    try {
+      const product = await saveProduct(input.data, Array.isArray(req.files) ? req.files : []);
+      res.status(201).location(`/products/${encodeURIComponent(product.productID)}`).json({ product });
+    } catch (error) {
+      if (error instanceof HttpError && error.status === 400) {
+        res.status(400).json({ error: error.message, details: { fieldErrors: { images: [error.message] } } });
+        return;
+      }
+      sendErrorResponse(error, res);
+    }
+  });
 
   router.get('/', async (req: Request, res: Response<ProductsResponseDto | { error: string }>) => {
     // Express's simple query parser leaves bracketed parameters as literal keys.
