@@ -9,6 +9,7 @@ import {
 } from '../services/orderTotals';
 import { processPayment } from '../services/payments';
 import { lockCustomer } from './customerLock';
+import { findReorderItems } from './reorder';
 
 export interface CompletedCheckout extends OrderTotalsDto {
   orderID: string;
@@ -19,15 +20,18 @@ export async function completeCheckout(
   input: CheckoutInput,
 ): Promise<CompletedCheckout> {
   const { prisma } = await import('../prismaClient');
+  const reorder = Boolean(input.reorderOrderID);
 
   return prisma.$transaction(async (transaction) => {
     // A second checkout for this customer waits here, then sees the already-cleared basket
     await lockCustomer(transaction, userID);
 
-    const basketItems = await transaction.basket.findMany({
-      where: { userID },
-      include: { product: true },
-    });
+    const basketItems = input.reorderOrderID
+      ? await findReorderItems(userID, input.reorderOrderID, transaction)
+      : await transaction.basket.findMany({
+          where: { userID },
+          include: { product: true },
+        });
 
     if (basketItems.length === 0) {
       throw new HttpError(400, 'Your basket is empty');
@@ -39,11 +43,13 @@ export async function completeCheckout(
     });
 
     let subtotalPence = 0;
+    let boughtCount = 0;
 
     for (const item of basketItems) {
       const { product } = item;
 
       if (!product.visible || product.draft || product.deletedAt !== null) {
+        if (reorder) continue;
         throw new HttpError(409, `${product.name} is no longer available`);
       }
 
@@ -53,6 +59,7 @@ export async function completeCheckout(
       });
 
       if (!latestPrice) {
+        if (reorder) continue;
         throw new HttpError(409, `${product.name} has no price`);
       }
 
@@ -63,6 +70,7 @@ export async function completeCheckout(
       });
 
       if (stockUpdate.count === 0) {
+        if (reorder) continue;
         throw new HttpError(409, `Not enough ${product.name} in stock`);
       }
 
@@ -76,6 +84,12 @@ export async function completeCheckout(
       });
 
       subtotalPence += toPence(latestPrice.price) * item.quantity;
+      boughtCount += 1;
+    }
+
+    // A reorder skips unavailable items, but needs at least one left. Throwing rolls back the order.
+    if (reorder && boughtCount === 0) {
+      throw new HttpError(409, 'None of the items from that order are available');
     }
 
     // The total is always worked out here, never taken from the browser
@@ -103,19 +117,22 @@ export async function completeCheckout(
       },
     });
 
-    const soldOut = await transaction.product.findMany({
-      where: {
-        productID: { in: basketItems.map((item) => item.productID) },
-        quantity: 0,
-      },
-      select: { productID: true },
-    });
+    // A reorder must leave the customer's basket exactly as it was
+    if (!reorder) {
+      const soldOut = await transaction.product.findMany({
+        where: {
+          productID: { in: basketItems.map((item) => item.productID) },
+          quantity: 0,
+        },
+        select: { productID: true },
+      });
 
-    await transaction.basket.deleteMany({
-      where: {
-        OR: [{ userID }, { productID: { in: soldOut.map((product) => product.productID) } }],
-      },
-    });
+      await transaction.basket.deleteMany({
+        where: {
+          OR: [{ userID }, { productID: { in: soldOut.map((product) => product.productID) } }],
+        },
+      });
+    }
 
     return { orderID: order.orderID, ...toTotalsDto(totals) };
   });
