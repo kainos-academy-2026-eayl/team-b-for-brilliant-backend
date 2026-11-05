@@ -14,11 +14,13 @@ export interface OrderDto {
   discount: string;
   delivery: string;
   total: string;
+  canReorder: boolean;
 }
 
 export interface OrderRecord {
   orderID: string;
   createdAt: Date;
+  paymentStatus?: string | null;
   deliveryCharge?: { toString(): string } | null;
   discountAmount?: { toString(): string } | null;
   orderItems: {

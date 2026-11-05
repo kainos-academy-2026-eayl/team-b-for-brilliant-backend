@@ -40,6 +40,7 @@ export function toOrderDto(order: OrderRecord): OrderDto {
     discount: formatPounds(discountPence),
     delivery: formatPounds(deliveryPence),
     total: formatPounds(itemsPence - discountPence + deliveryPence),
+    canReorder: order.paymentStatus === 'PAID' && items.length > 0,
   };
 }
 
