@@ -261,7 +261,7 @@ email or require an email-verification token.
 New accounts receive HTTP 202 with a message, `customerId`, `accessLevel: 0`, and
 an `accessToken` JWT, allowing them to make authenticated requests immediately.
 Already-registered addresses
-receive HTTP 400 with `{ "message": "Email already in use", "error": "Email already in use" }`,
+receive HTTP 400 with `{ "message": "Invalid details", "error": "Invalid details" }`,
 including duplicate submissions from simultaneous sign-ups. This response reveals
 whether an account exists. Invalid input returns HTTP 400; registration failures return
 HTTP 500. The former verification and resend-verification endpoints are removed.
