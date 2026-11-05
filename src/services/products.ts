@@ -1,6 +1,11 @@
 import type { ProductDto } from '../dtos/product';
 import { toProductDto } from '../mappers/product';
-import { createProductRecord, findProduct, findProducts, findProductsByName } from '../repositories/products';
+import {
+  createProductRecord,
+  findProduct,
+  findProducts,
+  findProductsByName,
+} from '../repositories/products';
 import type { CreateProduct } from '../schemas/product';
 import { type ProductImageUpload, withStoredProductImages } from './productImages';
 
@@ -10,7 +15,8 @@ export async function createProduct(
   saveProduct: typeof createProductRecord = createProductRecord,
 ): Promise<ProductDto> {
   return withStoredProductImages(images, async (storedImages) =>
-    toProductDto(await saveProduct(input, storedImages)));
+    toProductDto(await saveProduct(input, storedImages)),
+  );
 }
 
 export async function getProducts(

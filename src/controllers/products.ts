@@ -1,8 +1,8 @@
 import { type Request, type Response, Router } from 'express';
 import type { ProductDto, ProductResponseDto, ProductsResponseDto } from '../dtos/product';
+import { CategorySelectionError } from '../errors/categorySelectionError';
 import { HttpError, sendErrorResponse } from '../errors/httpError';
 import { parseProductUpload } from '../middleware/productUpload';
-import { CategorySelectionError } from '../errors/categorySelectionError';
 import { ProductSearchSchema, validateCreateProduct } from '../schemas/product';
 import { getCurrentProductPrice, getProductPrices } from '../services/productPrices';
 import { createProduct, getProduct, getProductsByName } from '../services/products';
@@ -30,11 +30,16 @@ export function createProductsRouter(
 
     try {
       const product = await saveProduct(input.data, Array.isArray(req.files) ? req.files : []);
-      res.status(201).location(`/products/${encodeURIComponent(product.productID)}`).json({ product });
+      res
+        .status(201)
+        .location(`/products/${encodeURIComponent(product.productID)}`)
+        .json({ product });
     } catch (error) {
       if (error instanceof HttpError && error.status === 400) {
         const field = error instanceof CategorySelectionError ? 'categoryIDs' : 'images';
-        res.status(400).json({ error: error.message, details: { fieldErrors: { [field]: [error.message] } } });
+        res
+          .status(400)
+          .json({ error: error.message, details: { fieldErrors: { [field]: [error.message] } } });
         return;
       }
       sendErrorResponse(error, res);

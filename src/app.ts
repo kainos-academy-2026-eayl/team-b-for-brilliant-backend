@@ -5,6 +5,7 @@ import { createAccountDetailsRouter } from './controllers/accountDetails';
 import { authServices, createAuthRouter } from './controllers/auth';
 import { basketRouter } from './controllers/basket';
 import { bookingsRouter } from './controllers/bookings';
+import { createCategoriesRouter } from './controllers/categories';
 import { checkoutRouter } from './controllers/checkout';
 import { createDiscountsRouter, discountServices } from './controllers/discounts';
 import { ordersRouter } from './controllers/orders';
@@ -14,10 +15,9 @@ import { registrationRouter } from './controllers/registration';
 import type { ProductDto } from './dtos/product';
 import { authenticateCustomer } from './middleware/authenticateCustomer';
 import { requireAdmin } from './middleware/requireAdmin';
-import { createProduct, getProduct, getProducts } from './services/products';
-import { getProductImageDirectory } from './services/productImages';
-import { createCategoriesRouter } from './controllers/categories';
 import { getCategories } from './services/categories';
+import { getProductImageDirectory } from './services/productImages';
+import { createProduct, getProduct, getProducts } from './services/products';
 
 export function createApp(
   fetchProducts: () => Promise<ProductDto[]> = getProducts,
@@ -60,7 +60,10 @@ export function createApp(
   app.use('/bookings', bookingsRouter);
   app.use('/categories', authenticate, adminOnly, createCategoriesRouter(fetchCategories));
   app.post('/products', authenticate, adminOnly);
-  app.use('/products', createProductsRouter(fetchProducts, prices, fetchProduct, undefined, saveProduct));
+  app.use(
+    '/products',
+    createProductsRouter(fetchProducts, prices, fetchProduct, undefined, saveProduct),
+  );
   app.use('/basket', authenticate, basketRouter);
   app.use('/checkout', authenticate, checkoutRouter);
   app.use('/profile', authenticate, profileRouter);

@@ -23,20 +23,28 @@ export function getProductImageDirectory(): string {
 }
 
 async function normalizeImage(file: ProductImageUpload): Promise<Buffer> {
-  if (!PRODUCT_IMAGE_TYPES.includes(file.mimetype) || file.buffer.length > MAX_PRODUCT_IMAGE_BYTES) {
+  if (
+    !PRODUCT_IMAGE_TYPES.includes(file.mimetype) ||
+    file.buffer.length > MAX_PRODUCT_IMAGE_BYTES
+  ) {
     throw new HttpError(400, 'Upload JPEG, PNG or WebP images no larger than 5 MiB each.');
   }
   const isPng = file.buffer.subarray(0, 8).equals(Buffer.from('89504e470d0a1a0a', 'hex'));
   const isJpeg = file.buffer.subarray(0, 3).equals(Buffer.from('ffd8ff', 'hex'));
-  const isWebp = file.buffer.toString('ascii', 0, 4) === 'RIFF'
-    && file.buffer.toString('ascii', 8, 12) === 'WEBP';
+  const isWebp =
+    file.buffer.toString('ascii', 0, 4) === 'RIFF' &&
+    file.buffer.toString('ascii', 8, 12) === 'WEBP';
   if (!isPng && !isJpeg && !isWebp) {
     throw new HttpError(400, 'An image could not be read. Upload valid JPEG, PNG or WebP images.');
   }
   try {
     const image = sharp(file.buffer, { limitInputPixels: 40_000_000, failOn: 'warning' });
     const metadata = await image.metadata();
-    if (!metadata.format || !['jpeg', 'png', 'webp'].includes(metadata.format) || (metadata.pages ?? 1) > 1) {
+    if (
+      !metadata.format ||
+      !['jpeg', 'png', 'webp'].includes(metadata.format) ||
+      (metadata.pages ?? 1) > 1
+    ) {
       throw new HttpError(400, 'Upload static JPEG, PNG or WebP images.');
     }
     const normalized = await image.rotate().webp({ quality: 90 }).toBuffer();
@@ -47,7 +55,10 @@ async function normalizeImage(file: ProductImageUpload): Promise<Buffer> {
   } catch (error) {
     if (error instanceof HttpError) throw error;
     console.warn('Product image decoding failed', error);
-    throw new HttpError(400, 'An image could not be read. Upload valid JPEG, PNG or WebP images, up to 40 megapixels each.');
+    throw new HttpError(
+      400,
+      'An image could not be read. Upload valid JPEG, PNG or WebP images, up to 40 megapixels each.',
+    );
   }
 }
 
@@ -80,7 +91,9 @@ export async function withStoredProductImages<T>(
     return await save(images);
   } catch (error) {
     const cleanup = await Promise.allSettled(written.map((filePath) => unlink(filePath)));
-    const failures = cleanup.flatMap((result) => result.status === 'rejected' ? [result.reason] : []);
+    const failures = cleanup.flatMap((result) =>
+      result.status === 'rejected' ? [result.reason] : [],
+    );
     if (failures.length) {
       console.error('Product image cleanup failed', ...failures);
       throw new AggregateError([error, ...failures], 'Product creation and image cleanup failed');
