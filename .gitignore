@@ -8,5 +8,6 @@ src/generated
 prisma/migrations/.DS_Store
 prisma/.DS_Store
 public/images/.DS_Store
+public/images/upload-*
 public/.DS_Store
 .DS_Store

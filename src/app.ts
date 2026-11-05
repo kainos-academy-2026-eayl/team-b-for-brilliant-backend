@@ -8,6 +8,7 @@ import { bookingsRouter } from './controllers/bookings';
 import { checkoutRouter } from './controllers/checkout';
 import { createDiscountsRouter, discountServices } from './controllers/discounts';
 import { ordersRouter } from './controllers/orders';
+import { createProductEditorRouter, productEditorServices } from './controllers/productEditor';
 import { createProductsRouter, productPriceServices } from './controllers/products';
 import { profileRouter } from './controllers/profile';
 import { registrationRouter } from './controllers/registration';
@@ -24,6 +25,7 @@ export function createApp(
   authenticate: RequestHandler = authenticateCustomer,
   discounts = discountServices,
   adminOnly: RequestHandler = requireAdmin,
+  editor = productEditorServices,
 ): Express {
   const app = express();
 
@@ -40,6 +42,7 @@ export function createApp(
     return adminOnly(req, res, next);
   };
 
+  app.use('/admin/products', authenticate, adminOnly, createProductEditorRouter(editor));
   app.use(express.json());
   app.use(cors({ origin: process.env.FRONTEND_URL ?? 'http://localhost:8000' }));
   app.use('/api/v1/auth', registrationRouter);
