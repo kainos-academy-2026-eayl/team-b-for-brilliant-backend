@@ -29,9 +29,9 @@ export async function completeCheckout(
     const basketItems = input.reorderOrderID
       ? await findReorderItems(userID, input.reorderOrderID, transaction)
       : await transaction.basket.findMany({
-        where: { userID },
-        include: { product: true },
-      });
+          where: { userID },
+          include: { product: true },
+        });
 
     if (basketItems.length === 0) {
       throw new HttpError(400, 'Your basket is empty');

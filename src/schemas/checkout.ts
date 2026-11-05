@@ -20,8 +20,8 @@ export const QuoteSchema = z.object({
 });
 
 export const ReorderSessionSchema = z.object({
-    orderID: z.uuid(),
-    discountCode: z.string().trim().max(50).optional(),
+  orderID: z.uuid(),
+  discountCode: z.string().trim().max(50).optional(),
 });
 
 export const CheckoutSchema = z.object({
@@ -43,7 +43,7 @@ export const CheckoutSchema = z.object({
       .transform((value) => formatPostcode(value)),
   }),
   discountCode: z.string().trim().max(50).optional(),
-    reorderOrderID: z.uuid().optional(),
+  reorderOrderID: z.uuid().optional(),
   card: z.object({
     cardNumber: z
       .string()
@@ -91,9 +91,9 @@ export function validateCheckout(input: unknown) {
 }
 
 export function validateReorderSession(input: unknown) {
-    const result = ReorderSessionSchema.safeParse(input ?? {});
-    if (!result.success) {
-        return { success: false as const, fieldErrors: toFieldErrors(result.error) };
-    }
-    return { success: true as const, data: result.data };
+  const result = ReorderSessionSchema.safeParse(input ?? {});
+  if (!result.success) {
+    return { success: false as const, fieldErrors: toFieldErrors(result.error) };
+  }
+  return { success: true as const, data: result.data };
 }
