@@ -1,11 +1,14 @@
 import type { ProductDto } from '../dtos/product';
 import { toProductDto } from '../mappers/product';
 import {
+  createProductRecord,
   findProduct,
   findProducts,
   findProductsByName,
   type ProductFilters,
 } from '../repositories/products';
+import type { CreateProduct } from '../schemas/product';
+import { type ProductImageUpload, withStoredProductImages } from './productImages';
 
 export async function getFilteredProducts(
   filters: ProductFilters,
@@ -13,6 +16,16 @@ export async function getFilteredProducts(
 ): Promise<ProductDto[]> {
   const products = await fetchProducts(filters);
   return products.map(toProductDto);
+}
+
+export async function createProduct(
+  input: CreateProduct,
+  images: readonly ProductImageUpload[] = [],
+  saveProduct: typeof createProductRecord = createProductRecord,
+): Promise<ProductDto> {
+  return withStoredProductImages(images, async (storedImages) =>
+    toProductDto(await saveProduct(input, storedImages)),
+  );
 }
 
 export async function getProducts(

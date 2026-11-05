@@ -10,4 +10,5 @@ prisma/.DS_Store
 public/images/.DS_Store
 public/images/upload-*
 public/.DS_Store
+public/product-images/
 .DS_Store

@@ -15,9 +15,9 @@ test('product input validates required fields and trims the name', () => {
   assert.deepEqual(product, validProduct);
 });
 
-test('product input accepts optional description and boolean flags', () => {
+test('product input accepts optional description and draft status', () => {
   for (const description of ['Description', null]) {
-    const product = { ...validProduct, description, draft: false, visible: true };
+    const product = { ...validProduct, description, draft: false };
     assert.deepEqual(validateCreateProduct(product), { success: true, data: product });
   }
 });
@@ -46,7 +46,6 @@ test('product input rejects invalid field values without coercion', () => {
     { weight: '2' },
     { description: 123 },
     { draft: 'false' },
-    { visible: 1 },
   ];
 
   for (const fields of invalidFields) {
@@ -77,6 +76,7 @@ test('product input strips generated fields, images and unknown properties', () 
     productID: 'not-client-controlled',
     deletedAt: '2026-01-01',
     productImages: [],
+    visible: true,
     unexpected: true,
   });
 
