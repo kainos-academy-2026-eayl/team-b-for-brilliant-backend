@@ -10,7 +10,7 @@ export async function registerCustomer(
   const passwordHash = await hashPassword(password);
   const customer = await create(email, passwordHash);
   if (customer === null) {
-    throw new HttpError(400, 'Email already in use');
+    throw new HttpError(400, 'Invalid details');
   }
   return customer;
 }

@@ -18,9 +18,7 @@ test('registration rejects an existing email with HTTP 400', async () => {
   await assert.rejects(
     registerCustomer('existing@example.com', 'password123', async () => null),
     (error: unknown) =>
-      error instanceof HttpError &&
-      error.status === 400 &&
-      error.message === 'Email already in use',
+      error instanceof HttpError && error.status === 400 && error.message === 'Invalid details',
   );
 });
 
@@ -37,8 +35,8 @@ test('duplicate registration returns a message and error after email normalizati
     .send({ email: ' Existing@Example.com ', password: 'password123' })
     .expect(400);
   assert.deepEqual(response.body, {
-    message: 'Email already in use',
-    error: 'Email already in use',
+    message: 'Invalid details',
+    error: 'Invalid details',
   });
   assert.equal(log.mock.callCount(), 0);
 });
@@ -86,8 +84,8 @@ test('duplicate registration does not issue a JWT', async () => {
     .send({ email: 'existing@example.com', password: 'password123' })
     .expect(400);
   assert.deepEqual(response.body, {
-    message: 'Email already in use',
-    error: 'Email already in use',
+    message: 'Invalid details',
+    error: 'Invalid details',
   });
 });
 
