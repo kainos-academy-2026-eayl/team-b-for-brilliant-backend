@@ -9,6 +9,8 @@ export async function findOrdersForCustomer(userID: string): Promise<OrderRecord
     select: {
       orderID: true,
       createdAt: true,
+      deliveryCharge: true,
+      discountAmount: true,
       orderItems: {
         select: {
           productID: true,
