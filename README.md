@@ -318,6 +318,24 @@ Success returns HTTP 204. Invalid input returns 400, unauthenticated requests
 return 401, and a missing customer returns 404. No Prisma schema change or
 database migration is required.
 
+### Deleting an account
+
+`DELETE /account` requires a valid bearer token and deletes its owner's account. The
+`User` row and the customer's orders are kept so order history and records survive,
+but everything personal on the user is cleared to NULL in one transaction: email,
+password hash, names, address, postcode, role and security question/answer. Their
+basket is deleted. Each order keeps its own delivery details and card last 4. Nothing
+changes if any step fails. Success returns HTTP 204 with no body. A missing or already
+deleted account returns 404, unauthenticated requests return 401, and a storage
+failure returns 500 with `{ "error": "We could not delete your account. Please try again." }`.
+
+Every token the customer already holds is rejected immediately afterwards (the
+revocation list is in memory, like logout). The old email and password can no longer
+log in, and the email can be registered again. This needs the migration
+`20261105120000_allow_deleted_user_accounts`, which makes `User.email` and
+`User.passwordHash` nullable. The caller should discard its own token and redirect
+after the 204.
+
 ## Backend CI
 
 The `Backend CI` workflow runs on pull requests targeting `main` or `master` (including new commits and reopened PRs), and on pushes to either branch, including merges. It installs dependencies using `npm ci`, then runs:

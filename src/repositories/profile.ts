@@ -10,10 +10,17 @@ const profileFields = {
   postcode: true,
 } as const;
 
+// A deleted account has no email, and must look like a missing profile
+function toProfile<T extends { email: string | null }>(
+  user: T | null,
+): (Omit<T, 'email'> & { email: string }) | null {
+  return user?.email ? { ...user, email: user.email } : null;
+}
+
 export async function findProfile(userID: string): Promise<ProfileDto | null> {
   const { prisma } = await import('../prismaClient');
 
-  return prisma.user.findUnique({ where: { userID }, select: profileFields });
+  return toProfile(await prisma.user.findUnique({ where: { userID }, select: profileFields }));
 }
 
 export async function saveProfile(
@@ -29,5 +36,5 @@ export async function saveProfile(
     return null;
   }
 
-  return prisma.user.findUnique({ where: { userID }, select: profileFields });
+  return toProfile(await prisma.user.findUnique({ where: { userID }, select: profileFields }));
 }

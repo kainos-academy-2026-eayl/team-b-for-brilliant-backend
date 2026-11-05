@@ -6,6 +6,7 @@ const TOKEN_TTL_SECONDS = 24 * 60 * 60;
 const TOKEN_ISSUER = 'brilliant-backend';
 const TOKEN_AUDIENCE = 'brilliant-client';
 const revokedTokens = new Map<string, number>();
+const revokedCustomers = new Set<string>();
 
 export type AccessLevel = 0 | 1;
 
@@ -42,7 +43,8 @@ function verifyToken(token: string, now: number): JwtPayload | null {
       typeof payload.exp !== 'number' ||
       typeof payload.jti !== 'string' ||
       !payload.jti ||
-      revokedTokens.has(payload.jti)
+      revokedTokens.has(payload.jti) ||
+      revokedCustomers.has(payload.sub)
     ) {
       return null;
     }
@@ -86,6 +88,11 @@ export function getAuthenticatedUserForToken(
 
 export function getCustomerIDForToken(token: string, now: number = Date.now()): string | null {
   return getAuthenticatedUserForToken(token, now)?.customerID ?? null;
+}
+
+// Used when an account is deleted, so tokens already issued to it are rejected
+export function revokeSessionsForCustomer(customerID: string): void {
+  revokedCustomers.add(customerID);
 }
 
 export function endSession(token: string): boolean {

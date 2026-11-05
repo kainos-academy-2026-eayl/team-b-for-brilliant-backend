@@ -9,13 +9,13 @@ datasource db {
 
 model User {
   userID       String  @id @default(uuid())
-  email        String  @unique
+  email        String? @unique
   firstname    String?
   surname      String?
   addressLine1 String?
   addressLine2 String?
   postcode     String?
-  passwordHash String
+  passwordHash String?
 
   createdAt DateTime @default(now())
 

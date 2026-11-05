@@ -40,6 +40,15 @@ test('incorrect passwords remain invalid', async () => {
   assert.deepEqual(result, { status: 'invalid' });
 });
 
+test('a deleted account with no password hash can never sign in', async () => {
+  const result = await verifyCredentials('user@example.com', 'password123', async () => ({
+    customerID: 'user-1',
+    passwordHash: null,
+    accessLevel: 0,
+  }));
+  assert.deepEqual(result, { status: 'not_found' });
+});
+
 test('unknown accounts remain not found', async () => {
   assert.deepEqual(
     await verifyCredentials('missing@example.com', 'password123', async () => null),
