@@ -102,14 +102,28 @@ and may be null; `draft` is optional and defaults to `true`. Visibility is deriv
 when saving: draft products have `visible: false`, and non-drafts have
 `visible: true`. Submitted `visible` values are ignored, including legacy JSON
 and multipart fields. Existing products are not changed by this creation rule.
-Generated IDs, sales counts, categories and client-provided image
+Generated IDs, sales counts and client-provided image
 URLs cannot be set through this endpoint. An optional `price` decimal string
 (0 to 99,999,999.99, at most two decimal places) creates the initial price record
 without floating-point conversion. Price remains optional for existing JSON API
 clients, but is required by the admin creation form.
 
+An optional `categoryIDs` array links zero or more existing categories. There is
+no per-product category count cap. IDs are opaque and must be distinct; unknown
+or deleted IDs return HTTP 400 with a `categoryIDs` field error. Nested writes
+connect the existing category records and never create categories. Category
+assignment, product, price and image records are saved atomically, and failed
+assignments clean up uploaded files. No schema migration is required.
+
+`GET /categories` requires the same verified admin bearer token and returns
+`{ "categories": [...] }` from the category table, including unused categories.
+Each choice includes its ID, name, description, department ID and department name.
+This endpoint is read-only.
+
 The endpoint also accepts `multipart/form-data`: quantity and weight are decimal
 text, `draft` is `"true"` or `"false"`, and `price` uses the same decimal string.
+`categoryIDs` is a JSON-encoded array in one multipart field. Multipart metadata
+fields allow up to 1 MiB; this is a request-byte limit, not a category-count limit.
 Attach up to five files under `images`, each at most 5 MiB. Only static JPEG, PNG
 and WebP images up to 40 megapixels are accepted. Images are fully decoded and
 normalized to WebP; filenames are server-generated and multipart upload order

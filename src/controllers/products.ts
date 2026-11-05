@@ -2,6 +2,7 @@ import { type Request, type Response, Router } from 'express';
 import type { ProductDto, ProductResponseDto, ProductsResponseDto } from '../dtos/product';
 import { HttpError, sendErrorResponse } from '../errors/httpError';
 import { parseProductUpload } from '../middleware/productUpload';
+import { CategorySelectionError } from '../errors/categorySelectionError';
 import { ProductSearchSchema, validateCreateProduct } from '../schemas/product';
 import { getCurrentProductPrice, getProductPrices } from '../services/productPrices';
 import { createProduct, getProduct, getProductsByName } from '../services/products';
@@ -32,7 +33,8 @@ export function createProductsRouter(
       res.status(201).location(`/products/${encodeURIComponent(product.productID)}`).json({ product });
     } catch (error) {
       if (error instanceof HttpError && error.status === 400) {
-        res.status(400).json({ error: error.message, details: { fieldErrors: { images: [error.message] } } });
+        const field = error instanceof CategorySelectionError ? 'categoryIDs' : 'images';
+        res.status(400).json({ error: error.message, details: { fieldErrors: { [field]: [error.message] } } });
         return;
       }
       sendErrorResponse(error, res);

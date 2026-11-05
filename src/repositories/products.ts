@@ -1,4 +1,5 @@
-import type { Prisma } from '../generated/prisma/client';
+import { Prisma } from '../generated/prisma/client';
+import { CategorySelectionError } from '../errors/categorySelectionError';
 import type { CreateProduct } from '../schemas/product';
 import type { StoredProductImage } from '../services/productImages';
 
@@ -50,7 +51,8 @@ export async function createProductRecord(
 ): Promise<ProductWithRelations> {
   const { prisma } = await import('../prismaClient');
 
-  return prisma.product.create({
+  try {
+    return await prisma.product.create({
     data: {
       name: input.name,
       description: input.description ?? null,
@@ -60,10 +62,22 @@ export async function createProductRecord(
       visible: !(input.draft ?? true),
       ...(input.price !== undefined ? { productPrices: { create: { price: input.price } } } : {}),
       productImages: { create: images },
+      productCategories: {
+        create: (input.categoryIDs ?? []).map((categoryID) => ({
+          category: { connect: { categoryID } },
+        })),
+      },
     },
     include: {
       productImages: true,
       productCategories: { include: { category: { include: { department: true } } } },
     },
-  });
+    });
+  } catch (error) {
+    if (input.categoryIDs?.length && error instanceof Prisma.PrismaClientKnownRequestError
+      && (error.code === 'P2025' || error.code === 'P2003')) {
+      throw new CategorySelectionError();
+    }
+    throw error;
+  }
 }
