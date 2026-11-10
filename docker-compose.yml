@@ -1,5 +1,5 @@
-# Local development Postgres database
-# Start:  docker compose up -d
+# Build backend bundle first: npm run build
+# Start backend and Postgres: docker compose up --build -d
 # Stop:   docker compose down
 # Reset:  docker compose down -v   (deletes all data!)
 
@@ -24,6 +24,21 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  backend:
+    build: .
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      JWT_SECRET: ${JWT_SECRET}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-dev}:${POSTGRES_PASSWORD:-dev}@db:5432/${POSTGRES_DB:-app_dev}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   pgdata:
