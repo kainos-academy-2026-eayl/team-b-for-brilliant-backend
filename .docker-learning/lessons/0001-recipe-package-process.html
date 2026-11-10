@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>01 | Recipe, package, process</title>
+  <link rel="stylesheet" href="../assets/lesson.css">
+  <script src="../assets/quiz.js" defer></script>
+</head>
+<body>
+<main>
+  <nav aria-label="Learning navigation">
+    <a href="../MISSION.md">Your mission</a>
+    <a href="../reference/0001-backend-docker-map.html">Backend reference</a>
+    <a href="../RESOURCES.md">Reading library</a>
+  </nav>
+  <article>
+    <header>
+      <p class="eyebrow">Lesson 01 / 15 minutes / Docker foundations</p>
+      <h1>Recipe, package, process.</h1>
+      <p class="lead">Explain what we built before learning how we made it smaller.</p>
+      <p>Your win: identify a Dockerfile, image, and container in this backend, then run one safe command that makes the distinction visible.</p>
+    </header>
+
+    <section aria-labelledby="model">
+      <h2 id="model">1. Three different things <small>(4 min)</small></h2>
+      <figure aria-labelledby="flow-caption">
+        <ol class="flow">
+          <li><strong>Dockerfile</strong><span>The recipe.</span><span>Text instructions for building.</span></li>
+          <li><strong>Image</strong><span>The package.</span><span>Files and configuration for running.</span></li>
+          <li><strong>Container</strong><span>An instance.</span><span>Created from an image; can run or stop.</span></li>
+        </ol>
+        <figcaption id="flow-caption">Build follows the recipe to create an image. Run creates and starts a container from an image.</figcaption>
+      </figure>
+      <p>A <strong>Dockerfile</strong> is a text file, not a server. An <strong>image</strong> packages application files, Node.js, libraries, and startup configuration. A running <strong>container</strong> executes a process using that image, with its own writable layer and runtime settings. A stopped container is still a container.</p>
+      <p class="source">Primary sources: <a href="https://docs.docker.com/get-started/docker-concepts/building-images/writing-a-dockerfile/">Dockerfile</a>, <a href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-an-image/">image</a>, <a href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/">container</a>.</p>
+      <p>In our project, <code>FROM node:22-alpine AS base</code> chooses a starting image. The final <code>CMD ["node", "dist/index.js"]</code> records the default startup command; it does not start the backend while the image is being built.</p>
+      <p>An image does not change just because you edit the Dockerfile. You must build again. Existing containers do not automatically switch to the new image. <a href="https://docs.docker.com/build/building/best-practices/#rebuild-your-images-often">Why rebuilding matters.</a></p>
+    </section>
+
+    <section aria-labelledby="practice">
+      <h2 id="practice">2. Predict, then observe <small>(4 min)</small></h2>
+      <p>In the backend repository terminal, run this read-only inspection:</p>
+      <pre><code>docker image inspect lukealderdice09647/backend:v1.00.01-alpine --format '{{.Id}}'</code></pre>
+      <p>You should see an image ID beginning with <code>sha256:</code>. If Docker cannot find it, stop and ask me; do not rebuild or delete anything for this lesson.</p>
+      <p><strong>Predict first:</strong> will the next command rebuild the image, start our HTTP server, or run a short Node process?</p>
+      <pre><code>docker run --rm lukealderdice09647/backend:v1.00.01-alpine node --version</code></pre>
+      <details>
+        <summary>After running it: compare with the expected result</summary>
+        <p>It prints a Node 22 version, then exits. Docker creates a container using the existing image. <code>node --version</code> overrides our default startup command, so no backend server or database is started. <code>--rm</code> removes this temporary container when it exits; it does not delete the image. <a href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/">Container lifecycle source.</a></p>
+      </details>
+      <p class="note">Our two tagged backend images are packages you can reuse. Building them did not leave the backend server running. The existing Compose file starts Postgres, not the backend. Those are different operations.</p>
+    </section>
+
+    <section aria-labelledby="recall">
+      <h2 id="recall">3. Close the explanation; retrieve <small>(4 min)</small></h2>
+      <p>Answer from memory, not by scanning back. A mistaken first attempt helps us find the next useful explanation.</p>
+      <noscript><p>JavaScript is off. Write your answers and ask the agent to check them.</p></noscript>
+      <form data-quiz data-answer="a">
+        <fieldset>
+          <legend>1. What is our Dockerfile?</legend>
+          <label><input type="radio" name="q1" value="a" data-feedback="Correct. It is the recipe the builder follows, not an already-running server.">A recipe for building images.</label>
+          <label><input type="radio" name="q1" value="b" data-feedback="Not yet. A running process belongs to a container. Which option describes instructions?">A running backend server process.</label>
+          <label><input type="radio" name="q1" value="c" data-feedback="Not yet. Our database is a separate service. Which option describes the build instructions?">A database storing customer orders.</label>
+          <button type="submit">Check answer</button><button type="reset">Try again</button>
+          <output aria-live="polite"></output>
+        </fieldset>
+      </form>
+      <form data-quiz data-answer="b">
+        <fieldset>
+          <legend>2. What does a successful backend image build produce?</legend>
+          <label><input type="radio" name="q2" value="a" data-feedback="Not yet. The builder executes temporary processes, but the result is not your running application service.">A running backend server process.</label>
+          <label><input type="radio" name="q2" value="b" data-feedback="Correct. The build produces a reusable package with files and configuration. Run creates a container from it.">A reusable backend filesystem package.</label>
+          <label><input type="radio" name="q2" value="c" data-feedback="Not yet. A volume stores persistent data; it is not the package produced by this build.">A persistent database storage volume.</label>
+          <button type="submit">Check answer</button><button type="reset">Try again</button>
+          <output aria-live="polite"></output>
+        </fieldset>
+      </form>
+      <form data-quiz data-answer="c">
+        <fieldset>
+          <legend>3. You edit FROM but do not rebuild. What happens?</legend>
+          <label><input type="radio" name="q3" value="a" data-feedback="Not yet. An image is immutable. Editing a recipe does not rewrite a previously built package.">Existing images update their contents.</label>
+          <label><input type="radio" name="q3" value="b" data-feedback="Not yet. Containers do not watch and rebuild Dockerfiles automatically.">Running containers rebuild their images.</label>
+          <label><input type="radio" name="q3" value="c" data-feedback="Correct. Build a new image and recreate containers to use its changed contents.">Existing images keep their contents.</label>
+          <button type="submit">Check answer</button><button type="reset">Try again</button>
+          <output aria-live="polite"></output>
+        </fieldset>
+      </form>
+    </section>
+
+    <section aria-labelledby="return">
+      <h2 id="return">4. Say it without the page <small>(3 min)</small></h2>
+      <p>Tell me: <strong>"We changed ___, rebuilt ___, and used it to create ___."</strong> Then explain why changing to Alpine did not update the older image.</p>
+      <p>Tomorrow, before reopening this lesson, recall the three objects and one command that acts on each. In a later session, repeat with no hints.</p>
+      <p><strong>Primary reading:</strong> <a href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-an-image/">Docker: What is an image?</a> Read its explanation section, not every linked tutorial today.</p>
+      <p>Ask me follow-up questions about anything unclear. Share your quiz answers and teach-back so I can check your reasoning and choose the next lesson. Browser quiz feedback is not automatically sent to the agent or recorded as learning.</p>
+    </section>
+    <footer><a href="../reference/0001-backend-docker-map.html#changes">Next: locate our changes on the backend reference map</a> / <a href="../RESOURCES.md">Full reading library</a></footer>
+  </article>
+</main>
+</body>
+</html>
