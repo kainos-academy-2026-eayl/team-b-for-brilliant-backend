@@ -34,6 +34,8 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       DATABASE_URL: postgresql://${POSTGRES_USER:-dev}:${POSTGRES_PASSWORD:-dev}@db:5432/${POSTGRES_DB:-app_dev}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8000}
+    volumes:
+      - IMAGES:/app/public/images
     depends_on:
       db:
         condition: service_healthy
@@ -60,3 +62,4 @@ services:
 
 volumes:
   pgdata:
+  IMAGES:
