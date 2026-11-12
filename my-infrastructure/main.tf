@@ -1,4 +1,12 @@
 terraform {
+  backend "azurerm" {
+    storage_account_name = "teamb4brilliant"
+    container_name       = "tfstate"
+    key                  = "brilliant-backend-dev.tfstate"
+
+    use_azuread_auth = true
+    use_cli = true
+  }
   required_version = ">= 1.5.0"
 
   required_providers {
