@@ -11,3 +11,9 @@ public/images/.DS_Store
 public/images/upload-*
 public/.DS_Store
 .DS_Store
+
+# Terraform local artifacts and state may contain sensitive values.
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
