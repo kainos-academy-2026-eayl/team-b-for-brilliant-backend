@@ -46,7 +46,7 @@ services:
       retries: 10
 
   frontend:
-    image: brilliant-frontend:integration
+    build: ../team-b-for-brilliant-frontend
     restart: unless-stopped
     environment:
       NODE_ENV: production
