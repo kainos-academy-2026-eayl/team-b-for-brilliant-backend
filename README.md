@@ -3,7 +3,11 @@ Team B For Brilliant Backend
 
 ## Docker Compose CI
 
-The Docker Compose job runs after `build-lint-test` succeeds, reuses its backend
+CI runs three jobs in order: `lint-test` -> `build` -> `docker-compose`.
+Each job requires the previous job to succeed. The lint/test job generates the
+Prisma client before running its checks.
+
+The Docker Compose job runs after `build` succeeds, reuses its backend
 build, and builds the frontend from the sibling `../team-b-for-brilliant-frontend`
 checkout. It waits for the services, checks frontend health, and removes the
 containers and volumes afterward. CI uses disposable signing secrets.
