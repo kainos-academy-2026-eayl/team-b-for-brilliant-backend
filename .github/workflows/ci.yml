@@ -46,4 +46,4 @@ jobs:
         run: npm run test
 
       - name: Display message
-        run: echo "Hello from the workflow!"
+        run: echo "::notice::Hello from the Workflow!"
