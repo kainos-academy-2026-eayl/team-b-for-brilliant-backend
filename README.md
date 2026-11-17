@@ -1,6 +1,21 @@
 # team-b-for-brilliant-backend
 Team B For Brilliant Backend
 
+## Docker Compose CI
+
+The Docker Compose job runs after `build-lint-test` succeeds, reuses its backend
+build, and builds the frontend from the sibling `../team-b-for-brilliant-frontend`
+checkout. It waits for the services, checks frontend health, and removes the
+containers and volumes afterward. CI uses disposable signing secrets.
+
+For local full-stack startup, clone the frontend repository beside this one,
+run `npm ci && npm run build` in the backend, set `JWT_SECRET` and `COOKIE_SECRET`
+to values of at least 32 bytes in `.env`, then run `docker compose up --build -d`.
+
+If the frontend repository is private, configure the backend repository's
+`FRONTEND_REPO_TOKEN` Actions secret with a token that can read the frontend
+repository's contents. Otherwise, checkout uses the default GitHub token.
+
 ## Admin product editor API
 
 All `/admin/products` routes require a valid bearer token with admin access

@@ -47,3 +47,55 @@ jobs:
 
       - name: Display message
         run: echo "::notice::Hello from the Workflow!"
+
+      - name: Upload backend build
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-dist
+          path: dist/
+          if-no-files-found: error
+
+  docker-compose:
+    name: Docker Compose
+    needs: build-lint-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: team-b-for-brilliant-backend
+    env:
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      COOKIE_SECRET: ${{ secrets.COOKIE_SECRET }}
+
+    steps:
+      - name: Checkout backend
+        uses: actions/checkout@v4
+        with:
+          path: team-b-for-brilliant-backend
+
+      - name: Checkout frontend
+        uses: actions/checkout@v4
+        with:
+          repository: kainos-academy-2026-eayl/team-b-for-brilliant-frontend
+          token: ${{ secrets.FRONTEND_REPO_TOKEN || github.token }}
+          path: team-b-for-brilliant-frontend
+
+      - name: Download backend build
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-dist
+          path: team-b-for-brilliant-backend/dist
+
+      - name: Build and start services
+        run: docker compose up --build --wait --wait-timeout 120
+
+      - name: Check frontend health
+        run: curl --fail --retry 10 --retry-connrefused --retry-delay 2 http://localhost:8000/health
+
+      - name: Show service logs on failure
+        if: failure()
+        run: docker compose logs --no-color
+
+      - name: Stop services
+        if: always()
+        run: docker compose down --volumes --remove-orphans
