@@ -164,7 +164,6 @@ jobs:
         - name: Log in to ACR
           run: |
             az acr login --name ${{ secrets.ACR_NAME }}
-            az acr show --name "${{ secrets.ACR_NAME }}" --query loginServer --output tsv
 
         - name: Build and start services
           working-directory: team-b-for-brilliant-backend
@@ -173,7 +172,7 @@ jobs:
             COOKIE_SECRET: ${{ secrets.COOKIE_SECRET }}
           run: |
             docker compose up --build --wait --wait-timeout 120
-            docker tag "$(docker compose images --quiet backend)" ${{ secrets.ACR_NAME }}.azurecr.io/backend:${{ github.sha }}
-            docker push ${{ secrets.ACR_NAME }}.azurecr.io/backend:${{ github.sha }}
+            docker tag "$(docker compose images --quiet backend)" ${{ secrets.ACR_NAME }}/backend:${{ github.sha }}
+            docker push ${{ secrets.ACR_NAME }}/backend:${{ github.sha }}
 
 # Comment for another commit test
