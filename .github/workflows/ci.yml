@@ -164,6 +164,7 @@ jobs:
         - name: Log in to ACR
           run: |
             az acr login --name ${{ secrets.ACR_NAME }}
+            az acr show --name "${{ secrets.ACR_NAME }}" --query loginServer --output tsv
 
         - name: Build and start services
           working-directory: team-b-for-brilliant-backend
