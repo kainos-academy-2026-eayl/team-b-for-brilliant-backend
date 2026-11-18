@@ -5,6 +5,11 @@ on:
     branches:
       - main
       - master
+    types:
+      - closed
+      - opened
+      - reopened
+      - synchronize
 
   push:
     branches:
@@ -114,10 +119,51 @@ jobs:
       - name: Check frontend health
         run: curl --fail --retry 10 --retry-connrefused --retry-delay 2 http://localhost:8000/health
 
-      - name: Show service logs on failure
-        if: failure()
-        run: docker compose logs --no-color
-
       - name: Stop services
         if: always()
         run: docker compose down --volumes --remove-orphans
+
+  on-merge:
+    if: github.event.pull_request.merged == true && github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    needs: docker-compose
+    steps:
+        - name: Checkout backend
+          uses: actions/checkout@v4
+          with:
+            path: team-b-for-brilliant-backend
+
+        - name: Checkout frontend
+          uses: actions/checkout@v4
+          with:
+            repository: kainos-academy-2026-eayl/team-b-for-brilliant-frontend
+            token: ${{ secrets.FRONTEND_REPO_TOKEN || github.token }}
+            path: team-b-for-brilliant-frontend
+
+        - name: Download backend build
+          uses: actions/download-artifact@v4
+          with:
+            name: backend-dist
+            path: team-b-for-brilliant-backend/dist
+
+        - name: AZ Login
+          run: |
+            az login --service-principal \
+              --username ${{ secrets.AZURE_CLIENT_ID }} \
+              --password ${{ secrets.AZURE_SECRET }} \
+              --tenant ${{ secrets.AZURE_TENANT_ID }} \
+              --subscription ${{ secrets.SUBSCRIPTION_ID }}
+        
+        - name: Log in to ACR
+          run: |
+            az acr login --name ${{ secrets.ACR_NAME }}
+
+        - name: Build and start services
+          working-directory: team-b-for-brilliant-backend
+          env:
+            JWT_SECRET: ${{ secrets.JWT_SECRET }}
+            COOKIE_SECRET: ${{ secrets.COOKIE_SECRET }}
+          run: |
+            docker compose up --build --wait --wait-timeout 120
+            docker tag "$(docker compose images --quiet backend)" ${{ secrets.ACR_NAME }}.azurecr.io/backend:${{ github.sha }}
+            docker push ${{ secrets.ACR_NAME }}.azurecr.io/backend:${{ github.sha }}
