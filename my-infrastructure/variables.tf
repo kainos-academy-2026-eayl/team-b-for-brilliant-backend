@@ -35,3 +35,10 @@ variable "environment" {
     error_message = "environment must be dev, test, or prod."
   }
 }
+
+variable "secret_value" {
+  description = "A sensitive value for demonstration purposes."
+  type        = string
+  sensitive   = true
+  default     = "not-a-real-secret"
+}
