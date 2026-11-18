@@ -11,6 +11,7 @@ Explain what has changed in this repository over a period of time or on a branch
 ## Rules
 
 - **Never change anything.** Do not edit, create or delete files. Do not commit, stash, checkout, fetch, pull, merge, rebase or reset. Only run read commands such as `git log`, `git show`, `git diff`, `git status`, `git branch`, `git for-each-ref` and `git stash list`.
+- **Keep commands approval-friendly.** VS Code auto-approves plain read-only git commands but prompts for anything else. Run one simple `git <subcommand> ...` per call. Don't use `echo`, `for` loops, `sed`, `awk`, `grep` pipelines, `;` chains, or `git --no-pager` / `git -c` / `git -C` prefixes. Do filtering and counting yourself after reading the output. Prefer the file-reading and search tools over shell for anything that isn't git.
 - If the user asks you to change something during a recap, say this skill is read-only and stop.
 - **Mask secrets.** When quoting files, replace subscription IDs, tokens, passwords and keys with placeholders such as `<GUID>` or `<REDACTED>`.
 - Don't open `.env*`, `*.tfstate`, `*.tfvars` or key files unless essential to the recap. If you do, never print values; describe them (e.g. "contains an Azure subscription ID").
@@ -33,12 +34,13 @@ Choose the level from the user's input. If the input contains the word `technica
 
 **Simple (default):** plain English for someone who is not a git expert, with a lot of detail. Explain jargon the first time it appears. Focus on what changed and why it matters.
 
-**Technical:** write for a developer who knows git, CI and the stack.
-- Use exact terms without explaining them (e.g. "multi-stage build", "healthcheck", "remote backend", "squash merge").
-- For each change, give the specifics:
-  - **Files and symbols:** exact paths, function or resource names, config keys.
-  - **Values:** versions, ports, image tags, environment variables (masking secrets).
-  - **Mechanics:** how it works and what depends on what, e.g. job `needs:` ordering, `depends_on` conditions, which Terraform resource moved to which address.
+**Technical:** write for a developer who knows git, CI and the stack, so use exact terms without defining them (e.g. "multi-stage build", "healthcheck", "remote backend", "squash merge"). Explain behaviour, not inventory.
+- **Never just list names.** Don't write out file names, flags, stages, variables or commands without saying what they do and why. Every item must answer "what does this change, and what happens because of it?"
+  - Bad: "`runtime` stage: `NODE_ENV=production`, `PORT=3000`, `npm ci --omit=dev`. Exposes 3000."
+  - Good: "The image installs only production dependencies, because esbuild bundles with `--packages=external` and the app still needs `node_modules` at runtime. It listens on 3000, so anything that maps ports must match."
+- Group related files into one point (e.g. "ten product SVGs") instead of listing each one.
+- Mention a specific value (version, port, flag, variable, resource address) only when it changes behaviour or something else depends on it. Mask secrets.
+- Describe mechanics where they matter: what depends on what, ordering, what moved or was renamed, and what breaks if it is combined with another change.
 - Include short commit hashes next to each change.
 - Quote short, relevant snippets of code or config (under about 10 lines each), with secrets masked.
 - Add a **Technical notes** section at the end:
@@ -51,30 +53,30 @@ Choose the level from the user's input. If the input contains the word `technica
 
 ## Step 2: Gather the data
 
-Run these in the repo root. Always disable pagers (`git --no-pager`).
+Run these in the repo root, one command per call, as plain `git ...` (see "Keep commands approval-friendly").
 
 **For a date:**
-1. `git --no-pager log --since="<date>" --all --date=short --pretty=format:'%h %ad %an %s'` to list commits on every branch.
-2. `git --no-pager log --graph --oneline --all` to see which commits are on `main` and which are on side branches.
-3. `git --no-pager diff --stat <commit-before-the-period> HEAD` for the overall size of the change.
+1. `git log --since="<date>" --all --date=short --pretty=format:'%h %ad %an %s'` to list commits on every branch.
+2. `git log --graph --oneline --all --since="<date>"` to see which commits are on `main` and which are on side branches.
+3. `git diff --stat <commit-before-the-period> <main>` for the overall size of the change.
 
 How to find the values used above:
 - Commit before the period: `git rev-list -1 --before="<date>" <main>`
-- Main branch: `git symbolic-ref --short refs/remotes/origin/HEAD` (fall back to `main`, then `master`)
+- Main branch: `git rev-parse --abbrev-ref origin/HEAD` (fall back to `main`, then `master`)
 
 **For a branch:**
 1. Work out the main branch using the command above.
-2. `git --no-pager log <main>..<branch> --date=short --pretty=format:'%h %ad %an %s'` for the commits unique to the branch.
-3. `git --no-pager diff --stat <main>...<branch>` for the files changed.
-4. `git --no-pager rev-list --left-right --count <main>...<branch>` to say how far ahead or behind it is.
+2. `git log <main>..<branch> --date=short --pretty=format:'%h %ad %an %s'` for the commits unique to the branch.
+3. `git diff --stat <main>...<branch>` for the files changed.
+4. `git rev-list --left-right --count <main>...<branch>` to say how far ahead or behind it is.
 
-**Squash merges:** teams that squash-merge PRs create a new commit, so a branch that has really landed can still look "ahead" of main. To check, search main for the PR number or ticket (`git --no-pager log <main> --grep="KAN-125"`). If found, say "probably merged (squashed)" rather than "not merged".
+**Squash merges:** teams that squash-merge PRs create a new commit, so a branch that has really landed can still look "ahead" of main. To check, search main for the PR number or ticket (`git log <main> --grep="KAN-125"`). If found, say "probably merged (squashed)" rather than "not merged".
 
 **For both:**
-- `git --no-pager status -sb` to find uncommitted or untracked work.
-- `git --no-pager diff` and `git --no-pager diff --staged` to read what the uncommitted changes actually are.
-- `git --no-pager stash list` to find parked changes.
-- `git --no-pager branch -a -vv` to see local and remote branches and whether they are merged.
+- `git status -sb` to find uncommitted or untracked work.
+- `git diff` and `git diff --staged` to read what the uncommitted changes actually are.
+- `git stash list` to find parked changes.
+- `git branch -a -vv` to see local and remote branches and whether they are merged.
 - Remote branches reflect the last fetch, which may be out of date. Say so, because this skill never fetches.
 
 ## Step 3: Read the real changes
@@ -130,7 +132,7 @@ Technical level only. Risks, missing tests, breaking changes and follow-ups.
 - Prefer short sentences and bullet points.
 - Link to files in the repo when you mention them.
 - If GitHub tools are available, you may read PR titles and descriptions for extra context. This is optional; git alone is enough.
-- Be detailed, but organised: themes first, then files.
+- Be detailed, but organised: themes first, then files. Detail means explaining what things do and why, not listing more names.
 - If the period is very large, summarise by theme and offer to go deeper on one area instead of listing everything.
 - If there are no changes in the period, say so clearly and mention the date of the latest commit.
 
