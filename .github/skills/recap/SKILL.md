@@ -83,7 +83,7 @@ How to find the values used above:
 
 Don't rely on commit messages alone. They can be vague.
 
-- Use `git show <hash>` or `git diff <a> <b> -- <path>` to read the actual changes.
+- Use `git --no-pager show <hash>` or `git --no-pager diff <a> <b> -- <path>` to read the actual changes.
 - For large diffs, read file by file rather than all at once.
 - Read the current version of important files so you can explain what they do now, not just what changed.
 - Note who made each change, on what date, and the PR number if the message contains one (e.g. `(#53)`).
