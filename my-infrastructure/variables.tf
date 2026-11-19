@@ -4,12 +4,12 @@ variable "subscription_id" {
 }
 
 variable "resource_group_name" {
-  description = "Name for the backend Azure resource group."
+  description = "Optional name for the backend Azure resource group."
   type        = string
-  default     = "rg-brilliant-backend-dev"
+  default     = null
 
   validation {
-    condition = (
+    condition = var.resource_group_name == null ? true : (
       length(var.resource_group_name) >= 1 &&
       length(var.resource_group_name) <= 90 &&
       can(regex("^[A-Za-z0-9._()-]+$", var.resource_group_name)) &&
