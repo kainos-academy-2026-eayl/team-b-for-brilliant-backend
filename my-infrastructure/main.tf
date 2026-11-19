@@ -5,7 +5,7 @@ terraform {
     key                  = "brilliant-backend-dev.tfstate"
 
     use_azuread_auth = true
-    use_cli = true
+    use_cli          = true
   }
   required_version = ">= 1.5.0"
 
@@ -22,8 +22,12 @@ provider "azurerm" {
   subscription_id = var.subscription_id
 }
 
+locals {
+  resource_group_name = var.resource_group_name != null ? var.resource_group_name : "rg-brilliant-backend-${var.environment}"
+}
+
 resource "azurerm_resource_group" "backend" {
-  name     = var.resource_group_name
+  name     = local.resource_group_name
   location = var.location
 
   tags = {
