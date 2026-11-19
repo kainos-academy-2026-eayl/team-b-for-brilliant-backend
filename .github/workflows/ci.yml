@@ -183,6 +183,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
+      id-token: write
     outputs:
       merged-pr: ${{ steps.merged-pr.outputs.result }}
       terraform-version: ${{ steps.terraform-version.outputs.version }}
@@ -194,8 +195,9 @@ jobs:
         working-directory: my-infrastructure
         shell: bash
     env:
+      ARM_USE_OIDC: "true"
+      ARM_USE_CLI: "false"
       ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      ARM_CLIENT_SECRET: ${{ secrets.AZURE_SECRET }}
       ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
       TF_VAR_subscription_id: ${{ secrets.SUBSCRIPTION_ID }}
@@ -265,6 +267,9 @@ jobs:
       github.ref == 'refs/heads/main' &&
       needs.terraform-plan.outputs.merged-pr == 'true'
     timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
     concurrency:
       group: terraform-backend-dev
       cancel-in-progress: false
@@ -272,8 +277,9 @@ jobs:
       run:
         working-directory: my-infrastructure
     env:
+      ARM_USE_OIDC: "true"
+      ARM_USE_CLI: "false"
       ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      ARM_CLIENT_SECRET: ${{ secrets.AZURE_SECRET }}
       ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
       TF_VAR_subscription_id: ${{ secrets.SUBSCRIPTION_ID }}
