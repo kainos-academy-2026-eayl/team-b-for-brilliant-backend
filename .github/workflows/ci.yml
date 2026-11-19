@@ -174,5 +174,7 @@ jobs:
             docker compose up --build --wait --wait-timeout 120
             docker tag "$(docker compose images --quiet backend)" ${{ secrets.ACR_NAME }}/backend:${{ github.sha }}
             docker push ${{ secrets.ACR_NAME }}/backend:${{ github.sha }}
+            docker tag "$(docker compose images --quiet frontend)" ${{ secrets.ACR_NAME }}/frontend:${{ github.sha }}
+            docker push ${{ secrets.ACR_NAME }}/frontend:${{ github.sha }}
 
 # Comment for another commit test
