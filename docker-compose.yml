@@ -39,6 +39,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      ports:
+        - "3000:3000"
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:3000/health || exit 1" ]
       interval: 5s
