@@ -48,6 +48,16 @@ variable "key_vault_name" {
   }
 }
 
+variable "acr_name" {
+  description = "Name of the existing Azure Container Registry the identity pulls images from."
+  type        = string
+}
+
+variable "acr_resource_group_name" {
+  description = "Resource group containing the existing Azure Container Registry."
+  type        = string
+}
+
 variable "key_vault_purge_protection_enabled" {
   description = "Enable purge protection on the Key Vault. Cannot be disabled once enabled."
   type        = bool

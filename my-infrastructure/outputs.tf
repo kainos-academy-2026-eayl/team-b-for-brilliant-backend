@@ -27,3 +27,11 @@ output "key_vault_uri" {
   description = "Vault URI used to reference secrets from the Container App."
   value       = azurerm_key_vault.backend.vault_uri
 }
+
+output "identity_client_id" { 
+  value = azurerm_user_assigned_identity.apps.client_id 
+}
+
+output "identity_principal_id" { 
+  value = azurerm_user_assigned_identity.apps.principal_id 
+}
