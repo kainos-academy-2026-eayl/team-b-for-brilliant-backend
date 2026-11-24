@@ -26,6 +26,11 @@ locals {
   resource_group_name = var.resource_group_name != null ? var.resource_group_name : "rg-brilliant-backend-${var.environment}"
 }
 
+moved {
+  from = module.resource_group.azurerm_resource_group.this
+  to   = azurerm_resource_group.backend
+}
+
 resource "azurerm_resource_group" "backend" {
   name     = local.resource_group_name
   location = var.location
