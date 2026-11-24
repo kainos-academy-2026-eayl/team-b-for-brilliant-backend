@@ -18,3 +18,4 @@ presentations
 *.tfstate
 *.tfstate.*
 *.tfplan
+*.terraform.tfvars
