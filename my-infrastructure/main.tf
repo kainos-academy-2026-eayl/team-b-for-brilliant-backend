@@ -39,4 +39,35 @@ resource "azurerm_resource_group" "backend" {
     Environment = var.environment
     Project     = "brilliant-backend"
   }
+
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.apps.id]
+  }
+
+  registry {
+    server   = azurerm_container_registry.main.login_server
+    identity = azurerm_user_assigned_identity.apps.id
+  }
+
+  secret {
+    name                = "database-url"
+    key_vault_secret_id = "${azurerm_key_vault.backend.vault_uri}secrets/DATABASE-URL"
+    identity            = azurerm_user_assigned_identity.apps.id
+  }
+
+  template {
+    container {
+      # ...
+      env {
+        name        = "DATABASE_URL"
+        secret_name = "database-url"
+      }
+    }
+  }
+
+  depends_on = [
+    azurerm_role_assignment.kv_secrets_user,
+    azurerm_role_assignment.acr_pull,
+  ]
 }
