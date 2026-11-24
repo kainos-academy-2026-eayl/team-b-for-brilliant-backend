@@ -35,3 +35,21 @@ variable "environment" {
     error_message = "environment must be dev, test, or prod."
   }
 }
+
+
+variable "key_vault_name" {
+  description = "Optional globally unique name for the Key Vault (3-24 letters, numbers, hyphens)."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.key_vault_name == null ? true : can(regex("^[A-Za-z][A-Za-z0-9-]{1,22}[A-Za-z0-9]$", var.key_vault_name))
+    error_message = "Key Vault name must be 3-24 characters, start with a letter, end with a letter or number, and contain only letters, numbers, and hyphens."
+  }
+}
+
+variable "key_vault_purge_protection_enabled" {
+  description = "Enable purge protection on the Key Vault. Cannot be disabled once enabled."
+  type        = bool
+  default     = false
+}
