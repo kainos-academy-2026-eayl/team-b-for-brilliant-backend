@@ -63,3 +63,18 @@ variable "key_vault_purge_protection_enabled" {
   type        = bool
   default     = false
 }
+
+variable "backend_image" {
+  description = "Backend image repository and tag, for example brilliant-backend:v1."
+  type        = string
+}
+
+variable "frontend_image" {
+  description = "Frontend image repository and tag, for example brilliant-frontend:v1."
+  type        = string
+}
+
+variable "frontend_origin" {
+  description = "Public frontend origin for backend CORS, for example https://shop.example.com."
+  type        = string
+}
