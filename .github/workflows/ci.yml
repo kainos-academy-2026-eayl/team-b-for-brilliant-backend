@@ -244,6 +244,42 @@ jobs:
       - name: Validate Terraform
         run: terraform validate
 
+      - name: Log in to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.SUBSCRIPTION_ID }}
+
+      - name: Resolve newest ACR images
+        env:
+          ACR_NAME: ${{ vars.ACR_NAME }}
+          FRONTEND_REPOSITORY: "<frontend repository name in ACR>"
+        run: |
+          set -euo pipefail
+
+          resolve_image() {
+            local repository="$1" digest
+            digest=$(az acr manifest list-metadata \
+              --registry "$ACR_NAME" \
+              --name "$repository" \
+              --query 'sort_by([?tags[0] != null && createdTime != null], &createdTime)[-1].digest' \
+              --output tsv)
+
+            if [[ "$digest" != sha256:* ]]; then
+              echo "::error::No tagged image found in ACR repository $repository" >&2
+              return 1
+            fi
+
+            printf '%s@%s\n' "$repository" "$digest"
+          }
+
+          backend_image=$(resolve_image backend)
+          frontend_image=$(resolve_image "$FRONTEND_REPOSITORY")
+
+          printf 'TF_VAR_backend_image=%s\nTF_VAR_frontend_image=%s\n' \
+            "$backend_image" "$frontend_image" >> "$GITHUB_ENV"
+
       - name: Plan Terraform
         run: terraform plan -input=false -lock-timeout=5m -out=tfplan
 

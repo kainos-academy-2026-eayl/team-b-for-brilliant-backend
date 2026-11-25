@@ -77,4 +77,5 @@ variable "frontend_image" {
 variable "frontend_origin" {
   description = "Public frontend origin for backend CORS, for example https://shop.example.com."
   type        = string
+  default     = "https://temp-shop.example.com"
 }
