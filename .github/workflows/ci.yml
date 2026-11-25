@@ -251,10 +251,14 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.SUBSCRIPTION_ID }}
 
+      - name: Log in to ACR
+        run: |
+            az acr login --name ${{ vars.ACR_LOGIN_NAME }}
+
       - name: Resolve newest ACR images
         env:
           ACR_NAME: ${{ vars.ACR_NAME }}
-          FRONTEND_REPOSITORY: "<frontend repository name in ACR>"
+          FRONTEND_REPOSITORY: "frontend"
         run: |
           set -euo pipefail
 
