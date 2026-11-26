@@ -174,11 +174,15 @@ jobs:
             docker compose up --build --wait --wait-timeout 120
             docker tag "$(docker compose images --quiet backend)" ${{ vars.ACR_LOGIN_NAME }}/backend:${{ github.sha }}
             docker push ${{ vars.ACR_LOGIN_NAME }}/backend:${{ github.sha }}
+            docker tag "$(docker compose images --quiet db)" ${{ vars.ACR_LOGIN_NAME }}/database:${{ github.sha }}
+            docker push ${{ vars.ACR_LOGIN_NAME }}/database:${{ github.sha }}
 
   terraform-plan:
     name: Terraform Plan Dev
     runs-on: ubuntu-latest
-    needs: docker-compose
+    # Wait for on-merge so the newly pushed images exist in ACR before resolving them.
+    # With the default success() check, this job is skipped when on-merge is skipped.
+    needs: [docker-compose, on-merge]
     timeout-minutes: 20
     permissions:
       contents: read
@@ -280,27 +284,10 @@ jobs:
 
           backend_image=$(resolve_image backend)
           frontend_image=$(resolve_image "$FRONTEND_REPOSITORY")
+          database_image=$(resolve_image database)
 
-          printf 'TF_VAR_backend_image=%s\nTF_VAR_frontend_image=%s\n' \
-            "$backend_image" "$frontend_image" >> "$GITHUB_ENV"
-
-      - name: Resolve PostgreSQL image from Compose
-        env:
-          DB_SERVICE: db
-        run: |
-          set -euo pipefail
-
-          image=$(docker compose -f ../docker-compose.yml config --format json \
-            | jq -er --arg service "$DB_SERVICE" '.services[$service].image')
-
-          if [[ "$image" != */* ]]; then
-            image="docker.io/library/$image"
-          fi
-
-          digest=$(docker buildx imagetools inspect "$image" \
-            --format '{{json .Manifest}}' | jq -er '.digest')
-
-          printf 'TF_VAR_database_image=%s@%s\n' "${image%:*}" "$digest" >> "$GITHUB_ENV"
+          printf 'TF_VAR_backend_image=%s\nTF_VAR_frontend_image=%s\nTF_VAR_database_image=%s\n' \
+            "$backend_image" "$frontend_image" "$database_image" >> "$GITHUB_ENV"
 
       - name: Plan Terraform
         run: terraform plan -input=false -lock-timeout=5m -out=tfplan

@@ -72,7 +72,7 @@ resource "azurerm_container_app" "backend" {
 
     container {
       name   = "db"
-      image  = "docker.io/library/postgres:17-alpine"
+      image  = "${data.azurerm_container_registry.main.login_server}/${var.database_image}"
       cpu    = 0.25
       memory = "0.5Gi"
 

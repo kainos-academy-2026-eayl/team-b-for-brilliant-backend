@@ -81,6 +81,6 @@ variable "frontend_origin" {
 }
 
 variable "database_image" {
-  description = "Database image repository and tag, for example postgres:17-alpine."
+  description = "Database image repository and tag, for example database:v1."
   type        = string
 }
