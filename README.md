@@ -3,9 +3,24 @@ Team B For Brilliant Backend
 
 ## Docker Compose CI
 
-CI runs three jobs in order: `lint-test` -> `build` -> `docker-compose`.
+CI runs `lint-test` -> `e2e` -> `build` -> `docker-compose`.
 Each job requires the previous job to succeed. The lint/test job generates the
 Prisma client before running its checks.
+
+The E2E gate sends `backend-push` to the test harness, tests this backend commit
+with the frontend at `main`, and waits for the run matching its unique request
+ID. Its `result` output and job summary report `pass` or `fail`. Only `pass`
+allows Build, Docker Compose and the dependent deployment job to proceed.
+Harness failure, cancellation or a 40-minute wait timeout blocks those stages.
+The dispatch starts a workflow in the harness, not another backend workflow.
+
+Configure `E2E_DISPATCH_TOKEN` in this backend repository with **Contents:
+read and write** and **Actions: read** on the test harness. The harness workflow
+on its default branch must use `client_payload.request_id` as its run name.
+Merge these workflows into `main` to enable the gate on normal backend CI.
+Other branch pushes run the standalone dispatch-and-wait workflow; pushes to
+`main`/`master` and PRs use it through the CI job. Fork PRs without the secret
+fail the gate rather than bypassing it.
 
 The Docker Compose job runs after `build` succeeds, reuses its backend
 build, and builds the frontend from the sibling `../team-b-for-brilliant-frontend`
