@@ -10,6 +10,8 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY dist ./dist
+COPY prisma.config.ts ./
+COPY prisma ./prisma
 COPY public ./public
 RUN npm prune --omit=dev
 
