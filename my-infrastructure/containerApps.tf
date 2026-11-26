@@ -26,6 +26,12 @@ resource "azurerm_container_app" "backend" {
     key_vault_secret_id = "${azurerm_key_vault.backend.vault_uri}secrets/jwt-secret"
   }
 
+  secret {
+    name                = "postgres-password"
+    identity            = azurerm_user_assigned_identity.apps.id
+    key_vault_secret_id = "${azurerm_key_vault.backend.vault_uri}secrets/postgres-password"
+  }
+
   template {
     container {
       name   = "backend"
@@ -56,6 +62,33 @@ resource "azurerm_container_app" "backend" {
       env {
         name  = "FRONTEND_URL"
         value = var.frontend_origin
+      }
+    }
+
+        min_replicas = 1
+    max_replicas = 1
+
+    # Keep the existing backend container block here, unchanged.
+
+    container {
+      name   = "db"
+      image  = "docker.io/library/postgres:17-alpine"
+      cpu    = 0.25
+      memory = "0.5Gi"
+
+      env {
+        name  = "POSTGRES_USER"
+        value = "dev"
+      }
+
+      env {
+        name  = "POSTGRES_DB"
+        value = "app_dev"
+      }
+
+      env {
+        name        = "POSTGRES_PASSWORD"
+        secret_name = "postgres-password"
       }
     }
   }
