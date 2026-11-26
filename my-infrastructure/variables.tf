@@ -79,3 +79,8 @@ variable "frontend_origin" {
   type        = string
   default     = "https://temp-shop.example.com"
 }
+
+variable "database_image" {
+  description = "Database image repository and tag, for example postgres:17-alpine."
+  type        = string
+}
