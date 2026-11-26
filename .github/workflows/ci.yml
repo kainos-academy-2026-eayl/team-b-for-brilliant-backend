@@ -326,8 +326,8 @@ jobs:
       ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
       TF_VAR_subscription_id: ${{ secrets.SUBSCRIPTION_ID }}
-      TF_VAR_acr_name: ${{ secrets.ACR_NAME }}
-      TF_VAR_acr_resource_group_name: ${{ secrets.ACR_RESOURCE_GROUP_NAME }}
+      TF_VAR_acr_name: ${{ vars.ACR_NAME }}
+      TF_VAR_acr_resource_group_name: ${{ vars.RESOURCE_GROUP_NAME }}
       TF_VAR_environment: dev
       TF_IN_AUTOMATION: "true"
       TF_INPUT: "false"
