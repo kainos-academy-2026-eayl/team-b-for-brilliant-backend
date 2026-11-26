@@ -180,12 +180,9 @@ jobs:
   terraform-plan:
     name: Terraform Plan Dev
     runs-on: ubuntu-latest
-    # Wait for on-merge so the newly pushed images exist in ACR before resolving them
+    # Wait for on-merge so the newly pushed images exist in ACR before resolving them.
+    # With the default success() check, this job is skipped when on-merge is skipped.
     needs: [docker-compose, on-merge]
-    if: >-
-      !cancelled() &&
-      needs.docker-compose.result == 'success' &&
-      (needs.on-merge.result == 'success' || needs.on-merge.result == 'skipped')
     timeout-minutes: 20
     permissions:
       contents: read
